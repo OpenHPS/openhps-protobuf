@@ -2,12 +2,14 @@ import { DataSerializer, DataSerializerUtils, ObjectMetadata, Serializable } fro
 import { ObjectGenerator } from './ObjectGenerator';
 import * as fs from 'fs-extra';
 import * as path from 'path';
+import * as chalk from 'chalk';
 
 /**
  * Project generator
  */
 export class ProjectGenerator extends DataSerializer {
     private static _modules: Set<string> = new Set();
+    private static _packages: Set<string> = new Set();
 
     static findModule(dir: string): string {
         const packageFile = path.join(dir, 'package.json');
@@ -32,6 +34,7 @@ export class ProjectGenerator extends DataSerializer {
             const childModule = module.exports[key];
             if (objects.includes(childModule)) {
                 childModule.prototype._module = this.findModule(path.dirname(require.resolve(module.id)));
+                this._packages.add(childModule.prototype._module);
             }
         });
         module.children.forEach((module) => {
@@ -41,19 +44,20 @@ export class ProjectGenerator extends DataSerializer {
         });
     }
 
+    static getPackages(): string[] {
+        if (this._packages.size === 0) {
+            this.loadClasses();
+        }
+        return Array.from(this._packages.values());
+    }
+
     static loadClasses(): Array<ObjectMetadata> {
         const declarations: Array<ObjectMetadata> = [];
         this.knownTypes.forEach((value) => {
             const metadata = DataSerializerUtils.getOwnMetadata(value);
             const metadataClone = { ...metadata };
+            metadataClone.dataMembers = new Map(metadataClone.dataMembers);
             if (metadata) {
-                const superConstructor = Object.getPrototypeOf(metadata.classType);
-                const superMetadata = DataSerializerUtils.getRootMetadata(superConstructor);
-                if (superMetadata) {
-                    superMetadata.dataMembers.forEach((_, key) => {
-                        metadataClone.dataMembers.delete(key);
-                    });
-                }
                 declarations.push(metadataClone as ObjectMetadata);
             }
         });
@@ -72,22 +76,22 @@ export class ProjectGenerator extends DataSerializer {
         });
     }
 
-    static buildProject(): Promise<void> {
+    static buildProject(directory: string, verbose?: boolean): Promise<number> {
         return new Promise((resolve, reject) => {
-            const tmpDir = path.join(__dirname, '../../tmp');
-            const srcDir = path.join(tmpDir, '');
-
             // Prepare directories
-            if (fs.existsSync(tmpDir)) {
-                fs.rmSync(tmpDir, { recursive: true });
+            if (fs.existsSync(directory)) {
+                fs.rmSync(directory, { recursive: true });
             }
-            fs.mkdirSync(tmpDir, { recursive: true });
+            fs.mkdirSync(directory, { recursive: true });
 
             // Get all class sources
             ProjectGenerator.generateProtoMessages()
                 .then((classes) => {
                     classes.forEach((value, key) => {
-                        const packageDir = path.join(srcDir, ...value[0].split("."));
+                        if (verbose) {
+                            console.log(chalk.italic(`Generating ${key} of module ${value[0]}`));
+                        }
+                        const packageDir = path.join(directory, ...value[0].split('.'));
                         if (!fs.existsSync(packageDir)) {
                             fs.mkdirsSync(packageDir);
                         }
@@ -95,7 +99,7 @@ export class ProjectGenerator extends DataSerializer {
                             encoding: 'utf-8',
                         });
                     });
-                    resolve();
+                    resolve(classes.size);
                 })
                 .catch(reject);
         });
