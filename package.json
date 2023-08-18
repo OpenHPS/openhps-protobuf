@@ -35,7 +35,9 @@
     "bump:release": "standard-version -m 'chore(release): %s' --author='ci <ci@openhps.org>'"
   },
   "files": [
-    "dist/**/*"
+    "dist/**/*",
+    "src/**/*",
+    "LICENSE"
   ],
   "author": "Maxim Van de Wynckel",
   "license": "Apache-2.0",
