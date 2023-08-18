@@ -1,6 +1,5 @@
 import {
     ConcreteTypeDescriptor,
-    DataSerializer,
     DataSerializerUtils,
     Deserializer,
     IndexedObject,

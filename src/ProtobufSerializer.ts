@@ -38,11 +38,11 @@ export class ProtobufSerializer extends DataSerializer {
     static initialize(directory?: string): Promise<void> {
         return new Promise((resolve, reject) => {
             Promise.resolve(
-                !directory ? (ProjectGenerator.buildProject(path.normalize('tmp'), false) as any) : Promise.resolve(),
+                !directory ? (ProjectGenerator.buildProject(path.resolve('tmp'), false) as any) : Promise.resolve(),
             )
                 .then(() => {
                     const promises: Array<PromiseLike<void>> = [];
-                    const files = this.getFiles(directory ?? path.normalize('tmp'));
+                    const files = this.getFiles(path.resolve(directory ?? "tmp"));
                     for (const file of files) {
                         promises.push(
                             new Promise((resolveMessage) => {

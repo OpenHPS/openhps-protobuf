@@ -10,6 +10,8 @@
     "access": "public"
   },
   "scripts": {
+    "benchmark:1": "ts-node test/bench/serialization.bench.ts",
+    "benchmark:2": "ts-node test/bench/socket.bench.ts",
     "start": "node dist/cjs/bin/generator.js",
     "start:debug": "ts-node src/bin/generator.ts",
     "test": "mocha --config test/.mocharc.json",
@@ -47,12 +49,14 @@
     "@openhps/core": "^0.4.37",
     "@openhps/rf": "^0.1.40",
     "@openhps/socket": "^0.1.7",
+    "@types/benchmark": "^2.1.2",
     "@types/chai": "^4.3.5",
     "@types/fs-extra": "^11.0.1",
     "@types/mocha": "^10.0.1",
     "@types/node": "^20.5.0",
     "@typescript-eslint/eslint-plugin": ">=6.4.0",
     "@typescript-eslint/parser": ">=6.4.0",
+    "benchmark": "^2.1.4",
     "buffer": "^6.0.3",
     "eslint": "^8.47.0",
     "eslint-config-prettier": "^9.0.0",
@@ -77,10 +81,10 @@
   },
   "dependencies": {
     "@inquirer/prompts": "^3.0.2",
+    "chai": "^4.3.7",
     "chalk": "4.x",
     "fs-extra": "^11.1.1",
     "protobufjs": "^7.2.4",
-    "yargs": "^17.7.2",
-    "chai": "^4.3.7"
+    "yargs": "^17.7.2"
   }
 }

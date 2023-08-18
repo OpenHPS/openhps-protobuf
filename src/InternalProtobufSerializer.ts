@@ -96,7 +96,7 @@ export class InternalProtobufSerializer extends Serializer {
                 value: MessageType.encode(message).finish(),
             };
         } else {
-            const modifiedObject = super.convertAsObject.bind(this)(
+            return super.convertAsObject.bind(this)(
                 sourceObject,
                 typeDescriptor,
                 memberName,
@@ -104,7 +104,6 @@ export class InternalProtobufSerializer extends Serializer {
                 memberOptions,
                 serializerOptions,
             );
-            return modifiedObject;
         }
     }
 }
