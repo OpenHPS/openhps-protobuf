@@ -104,6 +104,7 @@ function test(): Promise<void> {
                 const buffer = ProtobufSerializer.serialize(frame);
                 const deserialized: DataFrame = ProtobufSerializer.deserialize(buffer);
                 expect(deserialized).to.not.be.undefined;
+                //console.log(deserialized.source)
                 console.log(chalk.green(`Basic serialization and deserialization test completed!`));
                 resolve();
             })

@@ -22,7 +22,7 @@ dummyFrame.addObject(dummyObject);
 
 const suite = new Suite();
 const settings = {
-    minSamples: 500,
+    minSamples: 100,
     initCount: 10
 };
 

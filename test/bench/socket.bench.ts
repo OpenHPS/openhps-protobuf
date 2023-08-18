@@ -1,10 +1,11 @@
-import { Suite } from 'benchmark';
+import { Deferred, Options, Suite } from 'benchmark';
 import { 
     Absolute3DPosition, 
     AngularVelocity, 
     CallbackSinkNode, 
     DataFrame, 
     DataObject, 
+    DataSerializer, 
     LinearVelocity, 
     Model, 
     ModelBuilder, 
@@ -25,9 +26,10 @@ dummyFrame.source = dummyObject;
 dummyFrame.addObject(dummyObject);
 
 const suite = new Suite();
-const settings = {
+const settings: Options = {
     minSamples: 100,
-    initCount: 10
+    initCount: 10,
+    defer: true,
 };
 const server1 = http.createServer();
 const server2 = http.createServer();
@@ -99,23 +101,37 @@ function buildModels(): Promise<void> {
     });
 }
 
+console.log("Initializing buffers ...");
 ProtobufSerializer.initialize().then(() => {
+
+    console.log("JSON length", Buffer.from(JSON.stringify(DataSerializer.serialize(dummyFrame))).byteLength);
+    console.log("Protobuf length", ProtobufSerializer.serialize(dummyFrame).byteLength);
+
+    console.log("Building models ...");
     return buildModels();
 }).then(() => {
-    suite.add("dataserializer#socket", (deferred: any) => {
+    console.log("Starting benchmark ...");
+    clientModel1.on('error', console.error);
+    clientModel2.on('error', console.error);
+    serverModel1.on('error', console.error);
+    serverModel2.on('error', console.error);
+    suite.add("dataserializer#socket", (deferred: Deferred) => {
         sink1.callback = () => deferred.resolve();
         clientModel1.push(dummyFrame);
     }, settings)
-    // .add("protobufserializer#socket", (deferred: any) => {
-    //     sink2.callback = () => deferred.resolve();
-    //     clientModel2.push(dummyFrame);
-    // }, settings)
+    .add("protobufserializer#socket", (deferred: Deferred) => {
+        sink2.callback = () => deferred.resolve();
+        clientModel2.push(dummyFrame);
+    }, settings)
     .on('cycle', function(event: any) {
         console.log(String(event.target));
     })
-    .run(); 
-    clientModel1.destroy();
-    serverModel1.destroy();
-    clientModel2.destroy();
-    serverModel2.destroy();
+    .run();
+
+    // clientModel1.destroy();
+    // serverModel1.destroy();
+    // clientModel2.destroy();
+    // serverModel2.destroy();
+    // server1.close();
+    // server2.close();
 }).catch(console.error);

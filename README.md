@@ -71,6 +71,8 @@ ProtobufSerializer.initialize("/home/openhps/protobuf/");
 ProtobufSerializer.initialize();
 ```
 
+An example protocol buffer message type can be seen below for a `DataObject`. The absolute and relative positions are set to an `Any` type.
+
 ```proto
 package openhps.core;
 syntax = "proto3";
