@@ -1,4 +1,4 @@
-import { Constructor, DataSerializer, DataSerializerConfig } from '@openhps/core';
+import { Constructor, DataSerializer, DataSerializerConfig, DataSerializerUtils } from '@openhps/core';
 import * as path from 'path';
 import * as protobuf from 'protobufjs';
 import * as fs from 'fs';
@@ -38,11 +38,11 @@ export class ProtobufSerializer extends DataSerializer {
     static initialize(directory?: string): Promise<void> {
         return new Promise((resolve, reject) => {
             Promise.resolve(
-                !directory ? (ProjectGenerator.buildProject(path.resolve('tmp'), false) as any) : Promise.resolve(),
+                !directory ? (ProjectGenerator.buildProject(path.resolve('tmp')) as any) : Promise.resolve(),
             )
                 .then(() => {
                     const promises: Array<PromiseLike<void>> = [];
-                    const files = this.getFiles(path.resolve(directory ?? "tmp"));
+                    const files = this.getFiles(path.resolve(directory ?? 'tmp'));
                     for (const file of files) {
                         promises.push(
                             new Promise((resolveMessage) => {
@@ -105,10 +105,19 @@ export class ProtobufSerializer extends DataSerializer {
         const typeURL = decodedData.data.type_url;
         const MessageType = this.options.types.get(typeURL) as protobuf.Type;
         const decodedMessage = MessageType.decode(decodedData.data.value);
-        return super.deserialize(decodedMessage as any, dataType || (this.knownTypes.get(typeURL) as Constructor<T>), {
-            ...this.options,
-            ...config,
-        });
+
+        const finalType = dataType ?? (this.knownTypes.get(typeURL) as Constructor<T>);
+        return this.options.deserializer.convertSingleValue(
+            decodedMessage,
+            DataSerializerUtils.ensureTypeDescriptor(finalType),
+            DataSerializer.knownTypes,
+            undefined,
+            undefined,
+            {
+                ...config,
+                ...this.options
+            },
+        );
     }
 }
 

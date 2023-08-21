@@ -27,8 +27,8 @@ dummyFrame.addObject(dummyObject);
 
 const suite = new Suite();
 const settings: Options = {
-    minSamples: 100,
-    initCount: 10,
+    minSamples: 50,
+    initCount: 5,
     defer: true,
 };
 const server1 = http.createServer();
@@ -107,6 +107,8 @@ ProtobufSerializer.initialize().then(() => {
     console.log("JSON length", Buffer.from(JSON.stringify(DataSerializer.serialize(dummyFrame))).byteLength);
     console.log("Protobuf length", ProtobufSerializer.serialize(dummyFrame).byteLength);
 
+    ProtobufSerializer.deserialize(ProtobufSerializer.serialize(dummyFrame));
+    
     console.log("Building models ...");
     return buildModels();
 }).then(() => {

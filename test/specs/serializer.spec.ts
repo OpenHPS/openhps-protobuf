@@ -1,4 +1,4 @@
-import { Absolute3DPosition, AngleUnit, DataObject, DataSerializer, DataSerializerUtils, LengthUnit, Orientation, RelativeDistance, Velocity } from '@openhps/core';
+import { Absolute3DPosition, Accuracy1D, AngleUnit, DataObject, DataSerializer, DataSerializerUtils, LengthUnit, LinearVelocity, LinearVelocityUnit, Orientation, RelativeDistance, Velocity } from '@openhps/core';
 import { expect } from 'chai';
 import 'mocha';
 import { ProtobufSerializer } from '../../src';
@@ -19,9 +19,21 @@ describe("Serializer", () => {
         });
     });
 
+    describe('serialize()', () => {
+        it('should serialize any type members', () => {
+            const linearVelocity = new LinearVelocity(1, 2, 3, LinearVelocityUnit.METER_PER_SECOND);
+            const deserialized = ProtobufSerializer.deserialize(ProtobufSerializer.serialize(linearVelocity));
+            console.log(linearVelocity, deserialized)
+            expect(linearVelocity).to.eql(deserialized);
+        });
+    });
+
     describe('knownTypes', () => {
         it('should not break knownTypes', () => {
             expect(DataSerializerUtils.getOwnMetadata(Velocity).knownTypes.size).to.eql(1);
+            DataSerializer.deserialize(DataSerializer.serialize(new Absolute3DPosition()));
+            expect(DataSerializerUtils.getOwnMetadata(Velocity).knownTypes.size).to.eql(1);
+            expect(DataSerializerUtils.getOwnMetadata(Orientation).knownTypes.size).to.eql(1);
         });
     });
 });

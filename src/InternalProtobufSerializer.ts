@@ -1,23 +1,33 @@
 import {
     ConcreteTypeDescriptor,
-    DataSerializerUtils,
     IndexedObject,
     MapTypeDescriptor,
+    NumberType,
     ObjectMemberMetadata,
     ObjectMetadata,
+    SerializableMemberOptions,
     Serializer,
     TypeDescriptor,
-    TypedJSON
+    TypedJSON,
 } from '@openhps/core';
 import { Type } from 'protobufjs';
-import { AnyT } from 'typedjson';
+import { AnyT, JsonObjectMetadata } from 'typedjson';
 import * as protobuf from 'protobufjs';
+import Long from 'long';
 
 export class InternalProtobufSerializer extends Serializer {
     protected static primitiveWrapper: Type;
 
     constructor() {
         super();
+        this.setSerializationStrategy(Number, (obj: number, typeDescriptor: TypeDescriptor, memberName: string, serializer: InternalProtobufSerializer, memberOptions: SerializableMemberOptions) => {
+            switch (memberOptions.numberType) {
+                case NumberType.LONG:
+                    return Long.fromNumber(obj);
+                default:
+                    return obj;
+            }
+        });
         this.setSerializationStrategy(Map, this.convertAsMap.bind(this));
         InternalProtobufSerializer.primitiveWrapper = new protobuf.Type('PrimitiveWrapperMessage');
         InternalProtobufSerializer.primitiveWrapper.add(new protobuf.Field('value', 1, 'string'));
@@ -48,7 +58,7 @@ export class InternalProtobufSerializer extends Serializer {
             );
             return;
         }
-        
+
         const serializer = this.serializationStrategy.get(typeDescriptor.ctor);
         if (serializer !== undefined) {
             return serializer(sourceObject, typeDescriptor, memberName, this, memberOptions, serializerOptions);
@@ -82,10 +92,18 @@ export class InternalProtobufSerializer extends Serializer {
         memberOptions?: ObjectMemberMetadata,
         serializerOptions?: any,
     ) {
-        let sourceTypeMetadata: ObjectMetadata | undefined;
-        let targetObject: IndexedObject;
+        const typeMetadata: ObjectMetadata | undefined = JsonObjectMetadata.getFromConstructor(
+           typeDescriptor.ctor,
+        );
+        let sourceTypeMetadata: ObjectMetadata | undefined = JsonObjectMetadata.getFromConstructor(
+            sourceObject.constructor,
+        );
 
-        sourceTypeMetadata = DataSerializerUtils.getOwnMetadata(typeDescriptor.ctor);
+        if (!sourceTypeMetadata) {
+            sourceTypeMetadata = typeMetadata;
+        }
+
+        let targetObject: IndexedObject;
 
         if (sourceTypeMetadata === undefined) {
             // Untyped serialization, "as-is", we'll just pass the object on.
@@ -106,7 +124,6 @@ export class InternalProtobufSerializer extends Serializer {
             sourceMeta.dataMembers.forEach((objMemberMetadata) => {
                 const objMemberOptions = TypedJSON.options.mergeOptions(classOptions, objMemberMetadata.options);
                 let serialized;
-             
                 if (objMemberMetadata.type == null) {
                     throw new TypeError(
                         `Could not serialize ${objMemberMetadata.name}, there is` +
@@ -122,24 +139,24 @@ export class InternalProtobufSerializer extends Serializer {
                     );
                 }
 
-                if (
-                    TypedJSON.utils.isValueDefined(serialized)
-                ) {
+                if (TypedJSON.utils.isValueDefined(serialized)) {
                     if (objMemberMetadata.type() === AnyT) {
-                        const MessageType = serializerOptions.types.get(sourceObject[objMemberMetadata.key].constructor.name) as protobuf.Type;
+                        const MessageType = serializerOptions.types.get(
+                            sourceObject[objMemberMetadata.key].constructor.name,
+                        ) as protobuf.Type;
                         if (MessageType) {
                             const message = MessageType.fromObject(serialized);
                             serialized = {
                                 type_url: sourceObject[objMemberMetadata.key].constructor.name,
-                                value: MessageType.encode(message).finish()
+                                value: MessageType.encode(message).finish(),
                             };
                         } else {
                             const message = InternalProtobufSerializer.primitiveWrapper.fromObject({
-                                value: sourceObject[objMemberMetadata.key]
+                                value: sourceObject[objMemberMetadata.key],
                             });
                             serialized = {
                                 type_url: sourceObject[objMemberMetadata.key].constructor.name,
-                                value: InternalProtobufSerializer.primitiveWrapper.encode(message).finish()
+                                value: InternalProtobufSerializer.primitiveWrapper.encode(message).finish(),
                             };
                         }
                     }
@@ -147,7 +164,7 @@ export class InternalProtobufSerializer extends Serializer {
                 }
             });
 
-            if (sourceTypeMetadata.knownTypes.size > 1 && memberName) {
+            if (typeMetadata.knownTypes.size > 1 && memberName) {
                 const MessageType = serializerOptions.types.get(sourceObject.constructor.name) as protobuf.Type;
                 const message = MessageType.fromObject(targetObject);
                 targetObject = {

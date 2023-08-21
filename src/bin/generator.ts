@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-import * as chalk from 'chalk';
+import chalk from 'chalk';
 import { ProjectGenerator } from '../generator/ProjectGenerator';
 import '@openhps/rf';
 import * as path from 'path';
@@ -14,6 +14,8 @@ import {
     DataObject,
     DataSerializer,
     LengthUnit,
+    LinearVelocity,
+    LinearVelocityUnit,
     Orientation,
     RelativeDistance,
 } from '@openhps/core';
@@ -64,7 +66,7 @@ function prepare() {
  *
  */
 function generate() {
-    ProjectGenerator.buildProject(data.directory, args['v'] ?? false)
+    ProjectGenerator.buildProject(data.directory, args['v'] ? 3 : 2)
         .then((count) => {
             console.log(chalk.green(`${count} protocol buffer messages created!`));
             return test();
@@ -97,6 +99,12 @@ function test(): Promise<void> {
                     pitch: 10,
                     unit: AngleUnit.DEGREE,
                 });
+                object.position.velocity.linear = new LinearVelocity(
+                    1,
+                    0,
+                    0,
+                    LinearVelocityUnit.METER_PER_SECOND,
+                ).setAccuracy(new Accuracy1D(1, LinearVelocityUnit.CENTIMETER_PER_SECOND));
                 object.position.orientation.accuracy = new Accuracy1D(10, AngleUnit.DEGREE);
                 object.addRelativePosition(new RelativeDistance('test2', 10, LengthUnit.METER));
                 frame.source = object;
@@ -104,7 +112,12 @@ function test(): Promise<void> {
                 const buffer = ProtobufSerializer.serialize(frame);
                 const deserialized: DataFrame = ProtobufSerializer.deserialize(buffer);
                 expect(deserialized).to.not.be.undefined;
-                //console.log(deserialized.source)
+                const compare1 = JSON.stringify(DataSerializer.serialize(deserialized));
+                const compare2 = JSON.stringify(DataSerializer.serialize(frame));
+                console.log(compare1);
+                console.log("\n")
+                console.log(compare2)
+                expect(compare1).to.eql(compare2);
                 console.log(chalk.green(`Basic serialization and deserialization test completed!`));
                 resolve();
             })

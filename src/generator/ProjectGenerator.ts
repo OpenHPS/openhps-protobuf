@@ -2,7 +2,7 @@ import { DataSerializer, DataSerializerUtils, ObjectMetadata, Serializable } fro
 import { ObjectGenerator } from './ObjectGenerator';
 import * as fs from 'fs-extra';
 import * as path from 'path';
-import * as chalk from 'chalk';
+import chalk from 'chalk';
 
 /**
  * Project generator
@@ -65,18 +65,21 @@ export class ProjectGenerator extends DataSerializer {
         return declarations;
     }
 
-    static generateProtoMessages(): Promise<Map<string, [string, string]>> {
+    static generateProtoMessages(logLevel: number): Promise<Map<string, [string, string]>> {
         return new Promise((resolve) => {
             const classes = new Map();
             this.loadClasses().forEach((objectMetadata) => {
-                const javaClass = ObjectGenerator.createProtoMessage(objectMetadata);
+                if (logLevel > 2) {
+                    console.log(chalk.italic(`Generating ${objectMetadata.classType.name}`, objectMetadata.classType.prototype._module ? `of module ${objectMetadata.classType.prototype._module}`: ""));
+                }
+                const javaClass = ObjectGenerator.createProtoMessage(objectMetadata, logLevel);
                 classes.set(objectMetadata.classType.name, javaClass);
             });
             resolve(classes);
         });
     }
 
-    static buildProject(directory: string, verbose?: boolean): Promise<number> {
+    static buildProject(directory: string, logLevel: number = 0): Promise<number> {
         return new Promise((resolve, reject) => {
             // Prepare directories
             if (fs.existsSync(directory)) {
@@ -85,12 +88,13 @@ export class ProjectGenerator extends DataSerializer {
             fs.mkdirSync(directory, { recursive: true });
 
             // Get all class sources
-            ProjectGenerator.generateProtoMessages()
+            if (logLevel > 0)
+                console.log("Generating protocol buffer messages ...");
+            ProjectGenerator.generateProtoMessages(logLevel)
                 .then((classes) => {
+                    if (logLevel > 0)
+                        console.log("Saving generating protocol buffer messages ...");
                     classes.forEach((value, key) => {
-                        if (verbose) {
-                            console.log(chalk.italic(`Generating ${key} of module ${value[0]}`));
-                        }
                         const packageDir = path.join(directory, ...value[0].split('.'));
                         if (!fs.existsSync(packageDir)) {
                             fs.mkdirsSync(packageDir);

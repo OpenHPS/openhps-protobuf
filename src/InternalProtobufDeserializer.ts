@@ -1,15 +1,16 @@
 import {
     ConcreteTypeDescriptor,
-    DataSerializerUtils,
     Deserializer,
     IndexedObject,
     MapTypeDescriptor,
     ObjectMemberMetadata,
     ObjectMetadata,
     Serializable,
+    TypeDescriptor,
+    TypedJSON,
 } from '@openhps/core';
 import * as protobuf from 'protobufjs';
-import { AnyT } from 'typedjson';
+import { AnyT, JsonObjectMetadata } from 'typedjson';
 
 export class InternalProtobufDeserializer extends Deserializer {
     protected static primitiveWrapper: protobuf.Type;
@@ -20,19 +21,16 @@ export class InternalProtobufDeserializer extends Deserializer {
         InternalProtobufDeserializer.primitiveWrapper = new protobuf.Type('PrimitiveWrapperMessage');
         InternalProtobufDeserializer.primitiveWrapper.add(new protobuf.Field('value', 1, 'string'));
 
-        this.setDeserializationStrategy(
-            Number,
-            (object: any) => {
-                if (typeof object === 'number') {
-                    return object;
-                } else if (typeof object === 'string') {
-                    return Number(object);
-                } else if (object.toNumber) {
-                    return object.toNumber();
-                }
+        this.setDeserializationStrategy(Number, (object: any) => {
+            if (typeof object === 'number') {
                 return object;
+            } else if (typeof object === 'string') {
+                return Number(object);
+            } else if (object.toNumber) {
+                return object.toNumber();
             }
-        );
+            return object;
+        });
         this.setDeserializationStrategy(
             Map,
             (
@@ -48,12 +46,11 @@ export class InternalProtobufDeserializer extends Deserializer {
                 Object.keys(object).forEach((key) => {
                     result.set(
                         key,
-                        deserializer.convertAsObject(
+                        deserializer.convertSingleValue(
                             object[key],
                             typeDescriptor.valueType,
                             knownTypes,
                             memberName,
-                            deserializer,
                             memberOptions,
                             serializerOptions,
                         ),
@@ -64,34 +61,52 @@ export class InternalProtobufDeserializer extends Deserializer {
         );
     }
 
-    private _convertMembers(
-        sourceObject: IndexedObject,
-        memberMetadata: ObjectMetadata,
-        serializerOptions?: any): any {
-        memberMetadata.dataMembers.forEach(member => {
-            if (member.type() === AnyT) {
-                const MessageType = serializerOptions.types.get(sourceObject[member.name].type_url) as protobuf.Type;
-                if (MessageType) {
-                    const message = MessageType.decode(sourceObject[member.name].value);
-                    sourceObject[member.name] = {
-                        ...message,
-                        __type: sourceObject[member.name].type_url
-                    };
-                } else {
-                    const message = InternalProtobufDeserializer.primitiveWrapper.decode(sourceObject[member.name].value) as any;
-                    switch(sourceObject[member.name].type_url) {
-                        case "Boolean":
-                            sourceObject[member.name] = Boolean(message.value);
-                        case "Number":
-                            sourceObject[member.name] = Number(message.value);
-                        case "String":
-                        default:
-                            sourceObject[member.name] = message.value;
-                    }
-                }
-            }
-        });
-        return sourceObject;
+    convertSingleValue(
+        sourceObject: any,
+        typeDescriptor: TypeDescriptor,
+        knownTypes: Map<string, Serializable<any>>,
+        memberName?: string,
+        memberOptions?: ObjectMemberMetadata,
+        serializerOptions?: any,
+    ): any {
+        if (this.retrievePreserveNull(memberOptions) && sourceObject === null) {
+            return null;
+        } else if (!TypedJSON.utils.isValueDefined(sourceObject)) {
+            return;
+        }
+
+        const deserializer = this.deserializationStrategy.get(typeDescriptor.ctor);
+        if (deserializer !== undefined) {
+            return deserializer(
+                sourceObject,
+                typeDescriptor,
+                knownTypes,
+                memberName,
+                this,
+                memberOptions,
+                serializerOptions,
+            );
+        }
+
+        if (typeof sourceObject === 'object') {
+            return this.convertAsObject(
+                sourceObject,
+                typeDescriptor,
+                knownTypes,
+                memberName,
+                this,
+                memberOptions,
+                serializerOptions,
+            );
+        }
+
+        let error = `Could not deserialize '${memberName}'; don't know how to deserialize type`;
+
+        if (typeDescriptor.hasFriendlyName()) {
+            error += ` '${typeDescriptor.ctor.name}'`;
+        }
+
+        this.errorHandler(new TypeError(`${error}.`));
     }
 
     convertAsObject<T>(
@@ -99,20 +114,25 @@ export class InternalProtobufDeserializer extends Deserializer {
         typeDescriptor: ConcreteTypeDescriptor,
         knownTypes: Map<string, Serializable<any>>,
         memberName: string,
-        deserializer: Deserializer,
+        deserializer: InternalProtobufDeserializer,
         memberOptions?: ObjectMemberMetadata,
         serializerOptions?: any,
-    ): IndexedObject | T {
+    ): IndexedObject | T | undefined {
+        if ((typeof sourceObject as any) !== 'object' || (sourceObject as any) === null) {
+            deserializer.getErrorHandler()(
+                new TypeError(`Cannot deserialize ${memberName}: 'sourceObject' must be a defined object.`),
+            );
+            return undefined;
+        }
+        
+        let expectedSelfType = typeDescriptor.ctor;
+        let sourceObjectMetadata = JsonObjectMetadata.getFromConstructor(expectedSelfType);
+
         if (sourceObject.type_url && sourceObject.value) {
             const MessageType = serializerOptions.types.get(sourceObject.type_url) as protobuf.Type;
             const message = MessageType.decode(sourceObject.value);
-            const memberMetadata = DataSerializerUtils.getOwnMetadata(typeDescriptor.ctor);
-            this._convertMembers(message, memberMetadata, serializerOptions);
-            const data = super.convertAsObject.bind(this)(
-                {
-                    ...message,
-                    __type: sourceObject.type_url
-                },
+            const data = this.convertAsObject(
+                message,
                 new ConcreteTypeDescriptor(knownTypes.get(sourceObject.type_url)),
                 knownTypes,
                 memberName,
@@ -121,16 +141,105 @@ export class InternalProtobufDeserializer extends Deserializer {
                 serializerOptions,
             );
             return data;
-        } else {
-            return super.convertAsObject.bind(this)(
-                sourceObject,
-                typeDescriptor,
-                knownTypes,
-                memberName,
-                deserializer,
-                memberOptions,
-                serializerOptions,
-            );
         }
+
+        const sourceMetadata = sourceObjectMetadata;
+        // Strong-typed deserialization available, get to it.
+        // First deserialize properties into a temporary object.
+        const sourceObjectWithDeserializedProperties = {} as IndexedObject;
+
+        // Deserialize by expected properties.
+        sourceMetadata.dataMembers.forEach((objMemberMetadata, propKey) => {
+            const objMemberValue = sourceObject[propKey];
+            const objMemberDebugName = `${TypedJSON.utils.nameof(sourceMetadata.classType)}.${propKey}`;
+            const objMemberOptions = TypedJSON.options.mergeOptions(sourceMetadata.options, objMemberMetadata.options);
+
+            if (objMemberValue === undefined) {
+                return;
+            }
+
+            if (propKey === 'parentUID') {
+                console.log(objMemberValue, objMemberOptions)
+            }
+            let revivedValue;
+            if (objMemberMetadata.type == null) {
+                throw new TypeError(
+                    `Cannot deserialize ${objMemberDebugName} there is` +
+                        ` no constructor nor deserialization function to use.`,
+                );
+            } else if (objMemberMetadata.type() === AnyT) {
+                const MessageType = serializerOptions.types.get(sourceObject[objMemberMetadata.name].type_url) as protobuf.Type;
+                if (MessageType) {
+                    const message = MessageType.decode(sourceObject[objMemberMetadata.name].value);
+                    sourceObject[objMemberMetadata.name] = {
+                        ...message,
+                        __type: sourceObject[objMemberMetadata.name].type_url,
+                    };
+                } else if (sourceObject[objMemberMetadata.name].value) {
+                    const message = InternalProtobufDeserializer.primitiveWrapper.decode(
+                        sourceObject[objMemberMetadata.name].value,
+                    ) as any;
+                    switch (sourceObject[objMemberMetadata.name].type_url) {
+                        case 'Boolean':
+                            sourceObject[objMemberMetadata.name] = Boolean(message.value);
+                            break;
+                        case 'Number':
+                            sourceObject[objMemberMetadata.name] = Number(message.value);
+                            break;
+                        case 'String':
+                        default:
+                            sourceObject[objMemberMetadata.name] = message.value;
+                    }
+                }
+            } else {
+                revivedValue = deserializer.convertSingleValue(
+                    objMemberValue,
+                    objMemberMetadata.type(),
+                    knownTypes,
+                    objMemberDebugName,
+                    objMemberOptions,
+                    serializerOptions,
+                );
+            }
+
+            // @todo revivedValue will never be null in RHS of ||
+            if (
+                TypedJSON.utils.isValueDefined(revivedValue) ||
+                (deserializer.retrievePreserveNull(objMemberOptions) && (revivedValue as any) === null)
+            ) {
+                sourceObjectWithDeserializedProperties[objMemberMetadata.key] = revivedValue;
+            } else if (objMemberMetadata.isRequired === true) {
+                deserializer.getErrorHandler()(new TypeError(`Missing required member '${objMemberDebugName}'.`));
+            }
+        });
+
+        // Next, instantiate target object.
+        let targetObject: IndexedObject;
+        targetObject = deserializer.instantiateType(expectedSelfType);
+
+        // Finally, assign deserialized properties to target object.
+        Object.assign(targetObject, sourceObjectWithDeserializedProperties);
+
+        // Call onDeserialized method (if any).
+        const methodName = sourceObjectMetadata.onDeserializedMethodName;
+        if (methodName != null) {
+            if (typeof (targetObject as any)[methodName] === 'function') {
+                // check for member first
+                (targetObject as any)[methodName]();
+            } else if (typeof (targetObject.constructor as any)[methodName] === 'function') {
+                // check for static
+                (targetObject.constructor as any)[methodName]();
+            } else {
+                deserializer.getErrorHandler()(
+                    new TypeError(
+                        `onDeserialized callback` +
+                            `'${TypedJSON.utils.nameof(
+                                sourceObjectMetadata.classType,
+                            )}.${methodName}' is not a method.`,
+                    ),
+                );
+            }
+        }
+        return targetObject;
     }
 }

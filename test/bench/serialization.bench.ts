@@ -22,25 +22,37 @@ dummyFrame.addObject(dummyObject);
 
 const suite = new Suite();
 const settings = {
-    minSamples: 100,
-    initCount: 10
+    minSamples: 50,
+    initCount: 5
 };
 
 let serialized: any;
 let deserialized: DataFrame;
 
 ProtobufSerializer.initialize().then(() => {
-    suite.add("dataserializer#serialize", () => {
+    suite.add("dataserializer#serialize (simple)", () => {
+        serialized = DataSerializer.serialize(dummyObject.position);
+    }, settings)
+    .add("dataserializer#deserialize (simple)", () => {
+        deserialized = DataSerializer.deserialize(serialized);
+    }, settings)
+    .add("protobufserializer#serialize (simple)", () => {
+        serialized = ProtobufSerializer.serialize(dummyObject.position);
+    }, settings)
+    .add("protobufserializer#deserialize (simple)", () => {
+        deserialized = ProtobufSerializer.deserialize(serialized);
+    }, settings)
+    .add("dataserializer#serialize (advanced)", () => {
         serialized = DataSerializer.serialize(dummyFrame);
     }, settings)
-    .add("dataserializer#deserialize", () => {
+    .add("dataserializer#deserialize (advanced)", () => {
         deserialized = DataSerializer.deserialize(serialized);
     }, settings)
-    .add("protobufserializer#serialize", () => {
+    .add("protobufserializer#serialize (advanced)", () => {
         serialized = ProtobufSerializer.serialize(dummyFrame);
     }, settings)
-    .add("protobufserializer#deserialize", () => {
-        deserialized = DataSerializer.deserialize(serialized);
+    .add("protobufserializer#deserialize (advanced)", () => {
+        deserialized = ProtobufSerializer.deserialize(serialized);
     }, settings)
     .on('cycle', function(event: any) {
         console.log(String(event.target));
