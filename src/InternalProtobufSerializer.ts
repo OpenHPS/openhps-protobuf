@@ -20,14 +20,23 @@ export class InternalProtobufSerializer extends Serializer {
 
     constructor() {
         super();
-        this.setSerializationStrategy(Number, (obj: number, typeDescriptor: TypeDescriptor, memberName: string, serializer: InternalProtobufSerializer, memberOptions: SerializableMemberOptions) => {
-            switch (memberOptions.numberType) {
-                case NumberType.LONG:
-                    return Long.fromNumber(obj);
-                default:
-                    return obj;
-            }
-        });
+        this.setSerializationStrategy(
+            Number,
+            (
+                obj: number,
+                typeDescriptor: TypeDescriptor,
+                memberName: string,
+                serializer: InternalProtobufSerializer,
+                memberOptions: SerializableMemberOptions,
+            ) => {
+                switch (memberOptions.numberType) {
+                    case NumberType.LONG:
+                        return Long.fromNumber(obj);
+                    default:
+                        return obj;
+                }
+            },
+        );
         this.setSerializationStrategy(Map, this.convertAsMap.bind(this));
         InternalProtobufSerializer.primitiveWrapper = new protobuf.Type('PrimitiveWrapperMessage');
         InternalProtobufSerializer.primitiveWrapper.add(new protobuf.Field('value', 1, 'string'));
@@ -92,9 +101,7 @@ export class InternalProtobufSerializer extends Serializer {
         memberOptions?: ObjectMemberMetadata,
         serializerOptions?: any,
     ) {
-        const typeMetadata: ObjectMetadata | undefined = JsonObjectMetadata.getFromConstructor(
-           typeDescriptor.ctor,
-        );
+        const typeMetadata: ObjectMetadata | undefined = JsonObjectMetadata.getFromConstructor(typeDescriptor.ctor);
         let sourceTypeMetadata: ObjectMetadata | undefined = JsonObjectMetadata.getFromConstructor(
             sourceObject.constructor,
         );
@@ -130,7 +137,7 @@ export class InternalProtobufSerializer extends Serializer {
                             ` no constructor nor serialization function to use.`,
                     );
                 } else {
-                    serialized = serializer.convertSingleValue(
+                    serialized = this.convertSingleValue(
                         sourceObject[objMemberMetadata.key],
                         objMemberMetadata.type(),
                         `${TypedJSON.utils.nameof(sourceMeta.classType)}.${objMemberMetadata.key}`,
@@ -166,7 +173,7 @@ export class InternalProtobufSerializer extends Serializer {
 
             if (typeMetadata.knownTypes.size > 1 && memberName) {
                 const MessageType = serializerOptions.types.get(sourceObject.constructor.name) as protobuf.Type;
-                const message = MessageType.fromObject(targetObject);
+                const message = MessageType.create(targetObject);
                 targetObject = {
                     type_url: sourceObject.constructor.name,
                     value: MessageType.encode(message).finish(),

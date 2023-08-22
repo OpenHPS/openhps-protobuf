@@ -7,6 +7,7 @@ import {
     ObjectMetadata,
     SerializableMemberOptions,
     TypeDescriptor,
+    Serializable
 } from '@openhps/core';
 import chalk from 'chalk';
 import { AnyT } from 'typedjson';
@@ -15,7 +16,6 @@ import { AnyT } from 'typedjson';
  * Protobuf object generator
  */
 export class ObjectGenerator {
-
     protected static numberTypeMapping(numberType: NumberType): string {
         switch (numberType) {
             case NumberType.DECIMAL:
@@ -36,7 +36,7 @@ export class ObjectGenerator {
         object: ObjectMetadata,
         type: TypeDescriptor,
         memberOptions: ObjectMemberMetadata,
-        logLevel: number
+        logLevel: number,
     ): TypeMapping {
         switch (type.ctor) {
             case String:
@@ -62,7 +62,12 @@ export class ObjectGenerator {
                     syntax: 'bool',
                 };
             case Array: {
-                const mappings = this.typeMapping(object, (type as ArrayTypeDescriptor).elementType, memberOptions, logLevel);
+                const mappings = this.typeMapping(
+                    object,
+                    (type as ArrayTypeDescriptor).elementType,
+                    memberOptions,
+                    logLevel,
+                );
                 return {
                     syntax: `repeated ${mappings.syntax}`,
                     types: [mappings],
@@ -96,17 +101,17 @@ export class ObjectGenerator {
                         return {
                             syntax: 'google.protobuf.Any',
                         };
-                    // } else if (!memberMetadata || memberMetadata.knownTypes.size > 1) {
-                    //     return {
-                    //         syntax: 'oneof',
-                    //         types: Array.from(memberMetadata.knownTypes.values()).map((member: Serializable<any>) => {
-                    //             const packageStr = member.prototype._module ? member.prototype._module : '@openhps/core';
-                    //             return {
-                    //                 syntax: member.name,
-                    //                 package: packageStr
-                    //             }
-                    //         })
-                    //     };
+                    } else if (!memberMetadata || memberMetadata.knownTypes.size > 1) {
+                        return {
+                            syntax: 'oneof',
+                            types: Array.from(memberMetadata.knownTypes.values()).map((member: Serializable<any>) => {
+                                const packageStr = member.prototype._module ? member.prototype._module : '@openhps/core';
+                                return {
+                                    syntax: member.name,
+                                    package: packageStr
+                                }
+                            })
+                        };
                     } else {
                         const packageStr = type.ctor.prototype._module ? type.ctor.prototype._module : '@openhps/core';
                         return {
@@ -164,13 +169,18 @@ export class ObjectGenerator {
                     });
                 }
 
-                if (type.syntax === "oneof") {
+                if (type.syntax === 'oneof') {
                     // One Of
-                    return `\toneof ${member.name} {\n` + 
-                        type.types.map(type => {
-                            return `\t\t${type.syntax} ${member.name}_${type.syntax.toLowerCase()} = ${index++};`;
-                        }).filter(t => t !== undefined).join("\n") +
-                        `\n\t};`
+                    return (
+                        `\toneof ${member.name} {\n` +
+                        type.types
+                            .map((type) => {
+                                return `\t\t${type.syntax} ${member.name}_${type.syntax.toLowerCase()} = ${index++};`;
+                            })
+                            .filter((t) => t !== undefined)
+                            .join('\n') +
+                        `\n\t}`
+                    );
                 } else {
                     return `\t${type.syntax} ${member.name} = ${index++};`;
                 }

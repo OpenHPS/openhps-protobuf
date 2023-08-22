@@ -22,7 +22,7 @@ import {
 import { ProtobufSerializer } from '../ProtobufSerializer';
 import { expect } from 'chai';
 
-const args: [K: string] = yargs.argv;
+const args: [K: string] = yargs.argv as any;
 const data = {
     directory: path.normalize('tmp'),
 };
@@ -112,11 +112,11 @@ function test(): Promise<void> {
                 const buffer = ProtobufSerializer.serialize(frame);
                 const deserialized: DataFrame = ProtobufSerializer.deserialize(buffer);
                 expect(deserialized).to.not.be.undefined;
-                const compare1 = JSON.stringify(DataSerializer.serialize(deserialized));
-                const compare2 = JSON.stringify(DataSerializer.serialize(frame));
-                console.log(compare1);
-                console.log("\n")
-                console.log(compare2)
+                const compare1 = JSON.stringify(DataSerializer.serialize(deserialized), null, 2);
+                const compare2 = JSON.stringify(DataSerializer.serialize(frame), null, 2);
+                // console.log(compare1);
+                // console.log("\n")
+                // console.log(compare2)
                 expect(compare1).to.eql(compare2);
                 console.log(chalk.green(`Basic serialization and deserialization test completed!`));
                 resolve();

@@ -70,7 +70,14 @@ export class ProjectGenerator extends DataSerializer {
             const classes = new Map();
             this.loadClasses().forEach((objectMetadata) => {
                 if (logLevel > 2) {
-                    console.log(chalk.italic(`Generating ${objectMetadata.classType.name}`, objectMetadata.classType.prototype._module ? `of module ${objectMetadata.classType.prototype._module}`: ""));
+                    console.log(
+                        chalk.italic(
+                            `Generating ${objectMetadata.classType.name}`,
+                            objectMetadata.classType.prototype._module
+                                ? `of module ${objectMetadata.classType.prototype._module}`
+                                : '',
+                        ),
+                    );
                 }
                 const javaClass = ObjectGenerator.createProtoMessage(objectMetadata, logLevel);
                 classes.set(objectMetadata.classType.name, javaClass);
@@ -88,12 +95,10 @@ export class ProjectGenerator extends DataSerializer {
             fs.mkdirSync(directory, { recursive: true });
 
             // Get all class sources
-            if (logLevel > 0)
-                console.log("Generating protocol buffer messages ...");
+            if (logLevel > 0) console.log('Generating protocol buffer messages ...');
             ProjectGenerator.generateProtoMessages(logLevel)
                 .then((classes) => {
-                    if (logLevel > 0)
-                        console.log("Saving generating protocol buffer messages ...");
+                    if (logLevel > 0) console.log('Saving generating protocol buffer messages ...');
                     classes.forEach((value, key) => {
                         const packageDir = path.join(directory, ...value[0].split('.'));
                         if (!fs.existsSync(packageDir)) {

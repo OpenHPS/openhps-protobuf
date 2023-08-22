@@ -115,7 +115,7 @@ export class ProtobufSerializer extends DataSerializer {
             undefined,
             {
                 ...config,
-                ...this.options
+                ...this.options,
             },
         );
     }

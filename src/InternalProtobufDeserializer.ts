@@ -4,7 +4,6 @@ import {
     IndexedObject,
     MapTypeDescriptor,
     ObjectMemberMetadata,
-    ObjectMetadata,
     Serializable,
     TypeDescriptor,
     TypedJSON,
@@ -124,9 +123,9 @@ export class InternalProtobufDeserializer extends Deserializer {
             );
             return undefined;
         }
-        
-        let expectedSelfType = typeDescriptor.ctor;
-        let sourceObjectMetadata = JsonObjectMetadata.getFromConstructor(expectedSelfType);
+
+        const expectedSelfType = typeDescriptor.ctor;
+        const sourceObjectMetadata = JsonObjectMetadata.getFromConstructor(expectedSelfType);
 
         if (sourceObject.type_url && sourceObject.value) {
             const MessageType = serializerOptions.types.get(sourceObject.type_url) as protobuf.Type;
@@ -154,41 +153,44 @@ export class InternalProtobufDeserializer extends Deserializer {
             const objMemberDebugName = `${TypedJSON.utils.nameof(sourceMetadata.classType)}.${propKey}`;
             const objMemberOptions = TypedJSON.options.mergeOptions(sourceMetadata.options, objMemberMetadata.options);
 
-            if (objMemberValue === undefined) {
+            if (!sourceObject.hasOwnProperty(propKey)) {
                 return;
             }
 
-            if (propKey === 'parentUID') {
-                console.log(objMemberValue, objMemberOptions)
-            }
             let revivedValue;
             if (objMemberMetadata.type == null) {
                 throw new TypeError(
                     `Cannot deserialize ${objMemberDebugName} there is` +
                         ` no constructor nor deserialization function to use.`,
                 );
-            } else if (objMemberMetadata.type() === AnyT) {
-                const MessageType = serializerOptions.types.get(sourceObject[objMemberMetadata.name].type_url) as protobuf.Type;
+            } else if (objMemberMetadata.type() === AnyT && sourceObject[objMemberMetadata.name].type_url) {
+                const MessageType = serializerOptions.types.get(
+                    sourceObject[objMemberMetadata.name].type_url,
+                ) as protobuf.Type;
                 if (MessageType) {
                     const message = MessageType.decode(sourceObject[objMemberMetadata.name].value);
-                    sourceObject[objMemberMetadata.name] = {
-                        ...message,
-                        __type: sourceObject[objMemberMetadata.name].type_url,
-                    };
+                    revivedValue = deserializer.convertSingleValue(
+                        message,
+                        new ConcreteTypeDescriptor(knownTypes.get(sourceObject[objMemberMetadata.name].type_url)),
+                        knownTypes,
+                        objMemberDebugName,
+                        objMemberOptions,
+                        serializerOptions,
+                    );
                 } else if (sourceObject[objMemberMetadata.name].value) {
                     const message = InternalProtobufDeserializer.primitiveWrapper.decode(
                         sourceObject[objMemberMetadata.name].value,
                     ) as any;
                     switch (sourceObject[objMemberMetadata.name].type_url) {
                         case 'Boolean':
-                            sourceObject[objMemberMetadata.name] = Boolean(message.value);
+                            revivedValue = Boolean(message.value);
                             break;
                         case 'Number':
-                            sourceObject[objMemberMetadata.name] = Number(message.value);
+                            revivedValue = Number(message.value);
                             break;
                         case 'String':
                         default:
-                            sourceObject[objMemberMetadata.name] = message.value;
+                            revivedValue = message.value;
                     }
                 }
             } else {
@@ -214,8 +216,7 @@ export class InternalProtobufDeserializer extends Deserializer {
         });
 
         // Next, instantiate target object.
-        let targetObject: IndexedObject;
-        targetObject = deserializer.instantiateType(expectedSelfType);
+        const targetObject: IndexedObject = deserializer.instantiateType(expectedSelfType);
 
         // Finally, assign deserialized properties to target object.
         Object.assign(targetObject, sourceObjectWithDeserializedProperties);
