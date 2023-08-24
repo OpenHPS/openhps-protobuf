@@ -47,9 +47,9 @@
   "devDependencies": {
     "@commitlint/cli": "^17.7.1",
     "@commitlint/config-conventional": "^17.7.0",
-    "@openhps/core": "^0.4.43",
+    "@openhps/core": "^0.4.46",
     "@openhps/mqtt": "^0.1.8",
-    "@openhps/rdf": "^0.4.8",
+    "@openhps/rdf": "^0.4.9",
     "@openhps/rf": "^0.1.40",
     "@openhps/socket": "^0.1.8",
     "@types/benchmark": "^2.1.2",
@@ -57,7 +57,7 @@
     "@types/fs-extra": "^11.0.1",
     "@types/long": "^5.0.0",
     "@types/mocha": "^10.0.1",
-    "@types/node": "^20.5.1",
+    "@types/node": "^20.5.3",
     "@typescript-eslint/eslint-plugin": ">=6.4.1",
     "@typescript-eslint/parser": ">=6.4.1",
     "benchmark": "^2.1.4",
@@ -81,7 +81,8 @@
     "typedoc": ">=0.24.8",
     "typescript": "^5.1.6",
     "webpack": "^5.88.2",
-    "webpack-cli": "^5.1.4"
+    "webpack-cli": "^5.1.4",
+    "wkt": "^0.1.1"
   },
   "dependencies": {
     "@inquirer/prompts": "^3.0.3",
@@ -89,7 +90,7 @@
     "chalk": "4.x",
     "fs-extra": "^11.1.1",
     "long": "^5.2.3",
-    "protobufjs": "^7.2.4",
+    "protobufjs": "^7.2.5",
     "yargs": "^17.7.2"
   }
 }

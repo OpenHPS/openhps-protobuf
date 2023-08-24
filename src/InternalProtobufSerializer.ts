@@ -137,12 +137,17 @@ export class InternalProtobufSerializer extends Serializer {
                             ` no constructor nor serialization function to use.`,
                     );
                 } else {
+                    const MessageType = sourceTypeMetadata.protobuf.messageType;
+                    const field = MessageType.get(objMemberMetadata.key);
                     serialized = this.convertSingleValue(
                         sourceObject[objMemberMetadata.key],
                         objMemberMetadata.type(),
                         `${TypedJSON.utils.nameof(sourceMeta.classType)}.${objMemberMetadata.key}`,
                         objMemberOptions,
-                        serializerOptions,
+                        {
+                            ...serializerOptions,
+                            field
+                        },
                     );
                 }
 
@@ -171,8 +176,15 @@ export class InternalProtobufSerializer extends Serializer {
                 }
             });
 
-            if (typeMetadata.knownTypes.size > 1 && memberName) {
-                const MessageType = serializerOptions.types.get(sourceObject.constructor.name) as protobuf.Type;
+            if (serializerOptions.field && serializerOptions.field.type !== 'google.protobuf.Any') {
+                const MessageType = sourceTypeMetadata.protobuf.messageType;
+                const message = MessageType.create({
+                    ...targetObject,
+                    _type: sourceTypeMetadata.protobuf.messageTypeEnum
+                });
+                targetObject = message;
+            } else if (typeMetadata.knownTypes.size > 1 && memberName) {
+                const MessageType = sourceTypeMetadata.protobuf.messageType;
                 const message = MessageType.create(targetObject);
                 targetObject = {
                     type_url: sourceObject.constructor.name,

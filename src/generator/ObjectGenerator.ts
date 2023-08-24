@@ -7,10 +7,12 @@ import {
     ObjectMetadata,
     SerializableMemberOptions,
     TypeDescriptor,
-    Serializable
+    SerializationUtils,
+    ConcreteTypeDescriptor,
 } from '@openhps/core';
 import chalk from 'chalk';
 import { AnyT } from 'typedjson';
+import { HEADER } from './constants';
 
 /**
  * Protobuf object generator
@@ -97,20 +99,24 @@ export class ObjectGenerator {
             default: {
                 if (type.ctor.name !== '') {
                     const memberMetadata = DataSerializerUtils.getOwnMetadata(type.ctor);
-                    if (!memberMetadata || memberMetadata.knownTypes.size > 1) {
+                    if (!memberMetadata) {
                         return {
                             syntax: 'google.protobuf.Any',
                         };
-                    } else if (!memberMetadata || memberMetadata.knownTypes.size > 1) {
+                    } else if (
+                        memberMetadata.knownTypes.size > 1 &&
+                        memberMetadata.protobuf.type &&
+                        memberMetadata.protobuf.type !== object.classType
+                    ) {
+                        return this.typeMapping(
+                            DataSerializerUtils.getOwnMetadata(memberMetadata.protobuf.type),
+                            type,
+                            memberOptions,
+                            logLevel,
+                        );
+                    } else if (memberMetadata.knownTypes.size > 1  && !memberMetadata.protobuf.type) {
                         return {
-                            syntax: 'oneof',
-                            types: Array.from(memberMetadata.knownTypes.values()).map((member: Serializable<any>) => {
-                                const packageStr = member.prototype._module ? member.prototype._module : '@openhps/core';
-                                return {
-                                    syntax: member.name,
-                                    package: packageStr
-                                }
-                            })
+                            syntax: 'google.protobuf.Any',
                         };
                     } else {
                         const packageStr = type.ctor.prototype._module ? type.ctor.prototype._module : '@openhps/core';
@@ -125,14 +131,87 @@ export class ObjectGenerator {
         return undefined;
     }
 
-    static createProtoMessage(object: ObjectMetadata, logLevel: number): [string, string] {
-        const dataMembers = Array.from(object.dataMembers.values());
-        const packageStr = object.classType.prototype._module ? object.classType.prototype._module : '@openhps/core';
+    static processObject(object: ObjectMetadata): void {
+        object.protobuf = object.protobuf ?? {};
 
+        const dataMembers = object.dataMembers;
+        // Parse object itself
+        if (object.knownTypes.size > 1) {
+            const subTypes = [];
+            const modules = new Set<string>();
+            let allowOverride: boolean = true;
+            const dataMembersClone = SerializationUtils.cloneDeep(dataMembers);
+            object.knownTypes.forEach((knownType) => {
+                const knownTypeMeta = DataSerializerUtils.getOwnMetadata(knownType);
+                const knownTypeDataMembers = knownTypeMeta.dataMembers;
+                modules.add(knownType.prototype._module);
+
+                if (knownType !== object.classType && knownType.prototype instanceof object.classType) {
+                    subTypes.push(knownType);
+                }
+
+                knownTypeDataMembers.forEach((member, key) => {
+                    member.options = member.options ?? {};
+                    member.options.protobuf = member.options.protobuf ?? {};
+
+                    if (!dataMembers.has(key)) {
+                        const memberClone = SerializationUtils.cloneDeep(member);
+                        // Optional
+                        memberClone.options.protobuf = {
+                            optional: true,
+                        };
+                        dataMembersClone.set(key, memberClone);
+                    } else if (dataMembers.get(key).type().ctor !== member.type().ctor) {
+                        allowOverride = false;
+                    }
+                });
+            });
+
+            object.protobuf.subTypes = subTypes;
+            object.protobuf.subModules = modules;
+            if (subTypes.length > 0 && modules.size === 1 && allowOverride) {
+                object.dataMembers = dataMembersClone;
+                object.protobuf.type = object.protobuf.type ?? object.classType;
+                subTypes.forEach((type) => {
+                    const subTypeMeta = DataSerializerUtils.getOwnMetadata(type);
+                    subTypeMeta.protobuf = subTypeMeta.protobuf ?? {};
+                    subTypeMeta.protobuf.type = object.classType;
+                });
+            }
+        }
+    }
+
+    static createProtoMessage(object: ObjectMetadata, logLevel: number): [string, string] {
+        const dataMembers = object.dataMembers;
+        const packageStr = object.classType.prototype._module ? object.classType.prototype._module : '@openhps/core';
         const imports = [];
-        let index = 1;
-        const members = dataMembers
+
+        // Parse object itself
+        let dataTypesEnum = undefined;
+        if (object.knownTypes.size > 1) {
+            if (object.protobuf.subTypes.length > 0 && object.protobuf.subModules.size === 1) {
+                imports.push(`import "../../common.proto";`);
+                dataTypesEnum =
+                    `\n\nenum ${object.classType.name}Type {\n` +
+                    object.protobuf.subTypes
+                        .map((type, i) => {
+                            return `\t${type.name
+                                .replace(/(?:^|\.?)(([A-Z0-9][a-z0-9]|$)|([0-9]+[A-Z]))/g, (_, y) => {
+                                    return '_' + y;
+                                })
+                                .replace(/(^_)|(_$)/g, '')
+                                .toUpperCase()} = ${i} [(className) = "${type.name}", (packageName) = "${type.prototype._module}"]`;
+                        })
+                        .join(';\n') +
+                    `;\n}\n`;
+            }
+        }
+
+        let index = 10;
+        const members = Array.from(dataMembers.values())
             .map((member) => {
+                const options: any =
+                    member.options && (member.options as any).protobuf ? (member.options as any).protobuf : {};
                 let type: TypeMapping = undefined;
                 if (member.type() === AnyT) {
                     type = {
@@ -169,34 +248,25 @@ export class ObjectGenerator {
                     });
                 }
 
-                if (type.syntax === 'oneof') {
-                    // One Of
-                    return (
-                        `\toneof ${member.name} {\n` +
-                        type.types
-                            .map((type) => {
-                                return `\t\t${type.syntax} ${member.name}_${type.syntax.toLowerCase()} = ${index++};`;
-                            })
-                            .filter((t) => t !== undefined)
-                            .join('\n') +
-                        `\n\t}`
-                    );
-                } else {
-                    return `\t${type.syntax} ${member.name} = ${index++};`;
-                }
+                return `\t${options.optional && !type.syntax.includes('<') ? 'optional ' : ''}${type.syntax} ${
+                    member.name
+                } = ${index++};`;
             })
             .filter((value) => value !== undefined);
 
         return [
             packageStr,
-            `package ${packageStr.replace('@', '').replace('/', '.')};\n` +
+            HEADER +
+                `package ${packageStr.replace('@', '').replace('/', '.')};\n` +
                 `syntax = "proto3";\n` +
                 imports
                     .filter((value, idx) => {
                         return imports.indexOf(value) === idx;
                     })
                     .join('\n') +
+                (dataTypesEnum ? dataTypesEnum : '') +
                 `\nmessage ${object.classType.name} {\n` +
+                (dataTypesEnum ? `\t${object.classType.name}Type _type = 0;\n` : '') +
                 members.join('\n') +
                 `\n` +
                 `}\n`,

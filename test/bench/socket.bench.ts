@@ -6,10 +6,12 @@ import {
     DataFrame, 
     DataObject, 
     DataSerializer, 
+    LengthUnit, 
     LinearVelocity, 
     Model, 
     ModelBuilder, 
-    Orientation 
+    Orientation, 
+    RelativeDistance
 } from '@openhps/core';
 import { ProtobufSerializer } from '../../src';
 import { SocketClient, SocketClientSink, SocketServer, SocketServerSource } from '@openhps/socket';
@@ -17,18 +19,32 @@ import * as http from 'http';
 
 const dummyFrame = new DataFrame();
 const dummyObject = new DataObject("dummy", "Dummy Data Object");
+dummyObject.addRelativePosition(new RelativeDistance("Test Object", 10, LengthUnit.METER))
 const position = new Absolute3DPosition(1, 2, 3);
 position.velocity.linear = new LinearVelocity(0.1, 0.1, 0.1);
+position.velocity.linear.setAccuracy(1);
 position.velocity.angular = new AngularVelocity(0.1, 0.1, 0.1);
+position.velocity.linear.setAccuracy(1);
 position.orientation = new Orientation(1, 2, 3, 1);
 dummyObject.setPosition(position);
 dummyFrame.source = dummyObject;
-dummyFrame.addObject(dummyObject);
+
+const max = 100;
+
+const frames = new Map<number, DataFrame>();
+frames.set(0, dummyFrame);
+for (let i = 1 ; i < max ; i ++) {
+    const frameClone = frames.get(i - 1).clone();
+    const clone = dummyObject.clone();
+    clone.uid = String(i);
+    frameClone.addObject(clone);
+    frames.set(i, frameClone);
+}
 
 const suite = new Suite();
 const settings: Options = {
-    minSamples: 50,
-    initCount: 5,
+    minSamples: 10,
+    initCount: 2,
     defer: true,
 };
 const server1 = http.createServer();
@@ -117,15 +133,18 @@ ProtobufSerializer.initialize().then(() => {
     clientModel2.on('error', console.error);
     serverModel1.on('error', console.error);
     serverModel2.on('error', console.error);
-    suite.add("dataserializer#socket", (deferred: Deferred) => {
-        sink1.callback = () => deferred.resolve();
-        clientModel1.push(dummyFrame);
-    }, settings)
-    .add("protobufserializer#socket", (deferred: Deferred) => {
-        sink2.callback = () => deferred.resolve();
-        clientModel2.push(dummyFrame);
-    }, settings)
-    .on('cycle', function(event: any) {
+    for (let i = 0 ; i < max ; i += 10) {
+        suite.add(`dataserializer#socket (${i})`, (deferred: Deferred) => {
+            sink1.callback = () => deferred.resolve();
+            clientModel1.push(frames.get(i));
+        }, settings)
+        .add(`protobufserializer#socket (${i})`, (deferred: Deferred) => {
+            sink2.callback = () => deferred.resolve();
+            clientModel2.push(frames.get(i));
+        }, settings);
+    }
+
+    suite.on('cycle', function(event: any) {
         console.log(String(event.target));
     })
     .run();

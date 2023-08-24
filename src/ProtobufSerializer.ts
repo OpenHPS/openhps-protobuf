@@ -48,10 +48,32 @@ export class ProtobufSerializer extends DataSerializer {
                             new Promise((resolveMessage) => {
                                 protobuf.load(file, (err: Error, root) => {
                                     if (err) {
+                                        err.message += ". In file " + file;
                                         return reject(err);
                                     }
                                     const className = path.parse(file).name;
-                                    this.options.types.set(className, root.lookupType(className));
+                                    const knownType = this.knownTypes.get(className);
+                                    if (knownType) {
+                                        const options = DataSerializerUtils.getOwnMetadata(this.knownTypes.get(className));
+                                        const MessageType = root.lookupType(className);
+                                        let enumNumber = undefined;
+                                        try {
+                                            const typeEnum = root.lookupEnum(`${className}Type`);
+                                            Object.keys(typeEnum.values).forEach(key => {
+                                                const otherClassName = typeEnum.valuesOptions[key]['(className)'];
+                                                if (otherClassName === className) {
+                                                    enumNumber = typeEnum.values[key];
+                                                }
+                                            });
+                                        } catch (ex) {
+                                            // Ignore :')
+                                        }
+                                        options.protobuf = {
+                                            messageType: MessageType,
+                                            messageTypeEnum: enumNumber
+                                        };
+                                        this.options.types.set(className, MessageType);
+                                    }
                                     resolveMessage();
                                 });
                             }),

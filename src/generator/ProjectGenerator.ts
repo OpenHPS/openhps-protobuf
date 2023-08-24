@@ -3,6 +3,7 @@ import { ObjectGenerator } from './ObjectGenerator';
 import * as fs from 'fs-extra';
 import * as path from 'path';
 import chalk from 'chalk';
+import { COMMON } from './constants';
 
 /**
  * Project generator
@@ -55,10 +56,8 @@ export class ProjectGenerator extends DataSerializer {
         const declarations: Array<ObjectMetadata> = [];
         this.knownTypes.forEach((value) => {
             const metadata = DataSerializerUtils.getOwnMetadata(value);
-            const metadataClone = { ...metadata };
-            metadataClone.dataMembers = new Map(metadataClone.dataMembers);
             if (metadata) {
-                declarations.push(metadataClone as ObjectMetadata);
+                declarations.push(metadata);
             }
         });
         this.loadModules(declarations.map((d) => d.classType));
@@ -68,7 +67,13 @@ export class ProjectGenerator extends DataSerializer {
     static generateProtoMessages(logLevel: number): Promise<Map<string, [string, string]>> {
         return new Promise((resolve) => {
             const classes = new Map();
-            this.loadClasses().forEach((objectMetadata) => {
+            const metaData = this.loadClasses();
+
+            metaData.forEach((objectMetadata) => {
+                ObjectGenerator.processObject(objectMetadata);
+            });
+
+            metaData.forEach((objectMetadata) => {
                 if (logLevel > 2) {
                     console.log(
                         chalk.italic(
@@ -108,6 +113,11 @@ export class ProjectGenerator extends DataSerializer {
                             encoding: 'utf-8',
                         });
                     });
+
+                    fs.writeFileSync(path.join(directory, 'common.proto'), COMMON, {
+                        encoding: 'utf-8',
+                    });
+
                     resolve(classes.size);
                 })
                 .catch(reject);
