@@ -19,6 +19,7 @@ declare module '@openhps/core/dist/types/data/decorators/metadata' {
             subTypes?: Serializable<any>[];
             subModules?: Set<string>;
             type?: Serializable<any>;
+            enumMapping?: Map<number, string>;
         };
     }
 }

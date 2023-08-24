@@ -124,10 +124,12 @@ export class InternalProtobufDeserializer extends Deserializer {
             return undefined;
         }
 
-        const expectedSelfType = typeDescriptor.ctor;
-        const sourceObjectMetadata = JsonObjectMetadata.getFromConstructor(expectedSelfType);
+        let expectedSelfType = typeDescriptor.ctor;
+        let sourceObjectMetadata = JsonObjectMetadata.getFromConstructor(expectedSelfType);
 
-        if (sourceObject.type_url && sourceObject.value) {
+        if (sourceObject._type) {
+            console.log(sourceObject)
+        } else if (sourceObject.type_url && sourceObject.value) {
             const MessageType = serializerOptions.types.get(sourceObject.type_url) as protobuf.Type;
             const message = MessageType.decode(sourceObject.value);
             const data = this.convertAsObject(

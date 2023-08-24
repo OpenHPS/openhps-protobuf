@@ -1,4 +1,4 @@
-import { Constructor, DataSerializer, DataSerializerConfig, DataSerializerUtils } from '@openhps/core';
+import { Constructor, DataSerializer, DataSerializerConfig, DataSerializerUtils, Serializable } from '@openhps/core';
 import * as path from 'path';
 import * as protobuf from 'protobufjs';
 import * as fs from 'fs';
@@ -57,6 +57,7 @@ export class ProtobufSerializer extends DataSerializer {
                                         const options = DataSerializerUtils.getOwnMetadata(this.knownTypes.get(className));
                                         const MessageType = root.lookupType(className);
                                         let enumNumber = undefined;
+                                        const enumMapping: Map<number, string> = new Map();
                                         try {
                                             const typeEnum = root.lookupEnum(`${className}Type`);
                                             Object.keys(typeEnum.values).forEach(key => {
@@ -64,13 +65,15 @@ export class ProtobufSerializer extends DataSerializer {
                                                 if (otherClassName === className) {
                                                     enumNumber = typeEnum.values[key];
                                                 }
+                                                enumMapping.set(typeEnum.values[key], typeEnum.valuesOptions[key]['(className)']);
                                             });
                                         } catch (ex) {
                                             // Ignore :')
                                         }
                                         options.protobuf = {
                                             messageType: MessageType,
-                                            messageTypeEnum: enumNumber
+                                            messageTypeEnum: enumNumber,
+                                            enumMapping
                                         };
                                         this.options.types.set(className, MessageType);
                                     }
