@@ -48,32 +48,40 @@ export class ProtobufSerializer extends DataSerializer {
                             new Promise((resolveMessage) => {
                                 protobuf.load(file, (err: Error, root) => {
                                     if (err) {
-                                        err.message += ". In file " + file;
+                                        err.message += '. In file ' + file;
                                         return reject(err);
                                     }
                                     const className = path.parse(file).name;
                                     const knownType = this.knownTypes.get(className);
                                     if (knownType) {
-                                        const options = DataSerializerUtils.getOwnMetadata(this.knownTypes.get(className));
+                                        const objectMeta = DataSerializerUtils.getOwnMetadata(
+                                            this.knownTypes.get(className),
+                                        );
+                                        const rootMeta = DataSerializerUtils.getRootMetadata(
+                                            this.knownTypes.get(className),
+                                        );
                                         const MessageType = root.lookupType(className);
                                         let enumNumber = undefined;
                                         const enumMapping: Map<number, string> = new Map();
                                         try {
-                                            const typeEnum = root.lookupEnum(`${className}Type`);
-                                            Object.keys(typeEnum.values).forEach(key => {
+                                            const typeEnum = root.lookupEnum(`${rootMeta.classType.name}Type`);
+                                            Object.keys(typeEnum.values).forEach((key) => {
                                                 const otherClassName = typeEnum.valuesOptions[key]['(className)'];
                                                 if (otherClassName === className) {
                                                     enumNumber = typeEnum.values[key];
                                                 }
-                                                enumMapping.set(typeEnum.values[key], typeEnum.valuesOptions[key]['(className)']);
+                                                enumMapping.set(
+                                                    typeEnum.values[key],
+                                                    typeEnum.valuesOptions[key]['(className)'],
+                                                );
                                             });
                                         } catch (ex) {
                                             // Ignore :')
                                         }
-                                        options.protobuf = {
+                                        objectMeta.protobuf = {
                                             messageType: MessageType,
                                             messageTypeEnum: enumNumber,
-                                            enumMapping
+                                            enumMapping,
                                         };
                                         this.options.types.set(className, MessageType);
                                     }
@@ -130,7 +138,6 @@ export class ProtobufSerializer extends DataSerializer {
         const typeURL = decodedData.data.type_url;
         const MessageType = this.options.types.get(typeURL) as protobuf.Type;
         const decodedMessage = MessageType.decode(decodedData.data.value);
-
         const finalType = dataType ?? (this.knownTypes.get(typeURL) as Constructor<T>);
         return this.options.deserializer.convertSingleValue(
             decodedMessage,

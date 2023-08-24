@@ -4,6 +4,7 @@ import {
     IndexedObject,
     MapTypeDescriptor,
     ObjectMemberMetadata,
+    ObjectMetadata,
     Serializable,
     TypeDescriptor,
     TypedJSON,
@@ -123,12 +124,17 @@ export class InternalProtobufDeserializer extends Deserializer {
             );
             return undefined;
         }
-
         let expectedSelfType = typeDescriptor.ctor;
-        let sourceObjectMetadata = JsonObjectMetadata.getFromConstructor(expectedSelfType);
-
-        if (sourceObject._type) {
-            console.log(sourceObject)
+        let sourceObjectMetadata: ObjectMetadata = JsonObjectMetadata.getFromConstructor(expectedSelfType);
+        if (sourceObject.hasOwnProperty('_type')) {
+            const enumTypeClassname = sourceObjectMetadata.protobuf.enumMapping.get(sourceObject._type);
+            if (enumTypeClassname) {
+                const enumType = knownTypes.get(enumTypeClassname);
+                if (enumType !== expectedSelfType) {
+                    expectedSelfType = enumType;
+                    sourceObjectMetadata = JsonObjectMetadata.getFromConstructor(expectedSelfType);
+                }
+            }
         } else if (sourceObject.type_url && sourceObject.value) {
             const MessageType = serializerOptions.types.get(sourceObject.type_url) as protobuf.Type;
             const message = MessageType.decode(sourceObject.value);
@@ -206,7 +212,6 @@ export class InternalProtobufDeserializer extends Deserializer {
                 );
             }
 
-            // @todo revivedValue will never be null in RHS of ||
             if (
                 TypedJSON.utils.isValueDefined(revivedValue) ||
                 (deserializer.retrievePreserveNull(objMemberOptions) && (revivedValue as any) === null)

@@ -16,6 +16,7 @@ import {
 import { ProtobufSerializer } from '../../src';
 import { SocketClient, SocketClientSink, SocketServer, SocketServerSource } from '@openhps/socket';
 import * as http from 'http';
+import { expect } from 'chai';
 
 const dummyFrame = new DataFrame();
 const dummyObject = new DataObject("dummy", "Dummy Data Object");
@@ -123,7 +124,12 @@ ProtobufSerializer.initialize().then(() => {
     console.log("JSON length", Buffer.from(JSON.stringify(DataSerializer.serialize(dummyFrame))).byteLength);
     console.log("Protobuf length", ProtobufSerializer.serialize(dummyFrame).byteLength);
 
-    ProtobufSerializer.deserialize(ProtobufSerializer.serialize(dummyFrame));
+    const serialized = ProtobufSerializer.serialize(dummyFrame);
+    const deserialized = ProtobufSerializer.deserialize(serialized);
+    const compare1 = JSON.stringify(DataSerializer.serialize(deserialized));
+    const compare2 = JSON.stringify(DataSerializer.serialize(dummyFrame));
+    // console.log(compare1, "\n\n", compare2)
+    // expect(compare1).to.eql(compare2);
     
     console.log("Building models ...");
     return buildModels();

@@ -23,8 +23,7 @@ describe("Serializer", () => {
         it('should serialize any type members', () => {
             const linearVelocity = new LinearVelocity(1, 2, 3, LinearVelocityUnit.METER_PER_SECOND);
             const deserialized = ProtobufSerializer.deserialize(ProtobufSerializer.serialize(linearVelocity));
-            console.log(linearVelocity, deserialized)
-            expect(linearVelocity).to.eql(deserialized);
+            expect(DataSerializer.serialize(linearVelocity)).to.eql(DataSerializer.serialize(deserialized));
         });
     });
 

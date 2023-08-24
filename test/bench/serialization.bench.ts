@@ -9,9 +9,9 @@ import {
     Orientation 
 } from '@openhps/core';
 import { ProtobufSerializer } from '../../src';
-import {
-    RDFSerializer
-} from '@openhps/rdf';
+// import {
+//     RDFSerializer
+// } from '@openhps/rdf';
 
 const dummyFrame = new DataFrame();
 const dummyObject = new DataObject("dummy", "Dummy Data Object");
@@ -45,12 +45,12 @@ ProtobufSerializer.initialize().then(() => {
     .add("protobufserializer#deserialize (simple)", () => {
         deserialized = ProtobufSerializer.deserialize(serialized);
     }, settings)
-    .add("rdfserializer#serialize (simple)", () => {
-        serialized = RDFSerializer.serialize(dummyObject.position);
-    }, settings)
-    .add("rdfserializer#deserialize (simple)", () => {
-        deserialized = RDFSerializer.deserialize(serialized);
-    }, settings)
+    // .add("rdfserializer#serialize (simple)", () => {
+    //     serialized = RDFSerializer.serialize(dummyObject.position);
+    // }, settings)
+    // .add("rdfserializer#deserialize (simple)", () => {
+    //     deserialized = RDFSerializer.deserialize(serialized);
+    // }, settings)
     .add("dataserializer#serialize (advanced)", () => {
         serialized = DataSerializer.serialize(dummyFrame);
     }, settings)
@@ -63,12 +63,12 @@ ProtobufSerializer.initialize().then(() => {
     .add("protobufserializer#deserialize (advanced)", () => {
         deserialized = ProtobufSerializer.deserialize(serialized);
     }, settings)
-    .add("rdfserializer#serialize (advanced)", () => {
-        serialized = RDFSerializer.serialize(dummyFrame);
-    }, settings)
-    .add("rdfserializer#deserialize (advanced)", () => {
-        deserialized = RDFSerializer.deserialize(serialized);
-    }, settings)
+    // .add("rdfserializer#serialize (advanced)", () => {
+    //     serialized = RDFSerializer.serialize(dummyFrame);
+    // }, settings)
+    // .add("rdfserializer#deserialize (advanced)", () => {
+    //     deserialized = RDFSerializer.deserialize(serialized);
+    // }, settings)
     .on('cycle', function(event: any) {
         console.log(String(event.target));
     })

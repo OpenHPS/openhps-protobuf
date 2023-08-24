@@ -4,6 +4,7 @@ import * as fs from 'fs-extra';
 import * as path from 'path';
 import chalk from 'chalk';
 import { COMMON } from './constants';
+import { ProjectBuildOptions } from './types';
 
 /**
  * Project generator
@@ -64,17 +65,17 @@ export class ProjectGenerator extends DataSerializer {
         return declarations;
     }
 
-    static generateProtoMessages(logLevel: number): Promise<Map<string, [string, string]>> {
+    static generateProtoMessages(options: ProjectBuildOptions): Promise<Map<string, [string, string]>> {
         return new Promise((resolve) => {
             const classes = new Map();
             const metaData = this.loadClasses();
 
             metaData.forEach((objectMetadata) => {
-                ObjectGenerator.processObject(objectMetadata);
+                ObjectGenerator.processObject(objectMetadata, options);
             });
 
             metaData.forEach((objectMetadata) => {
-                if (logLevel > 2) {
+                if (options.logLevel > 2) {
                     console.log(
                         chalk.italic(
                             `Generating ${objectMetadata.classType.name}`,
@@ -84,14 +85,14 @@ export class ProjectGenerator extends DataSerializer {
                         ),
                     );
                 }
-                const javaClass = ObjectGenerator.createProtoMessage(objectMetadata, logLevel);
+                const javaClass = ObjectGenerator.createProtoMessage(objectMetadata, options);
                 classes.set(objectMetadata.classType.name, javaClass);
             });
             resolve(classes);
         });
     }
 
-    static buildProject(directory: string, logLevel: number = 0): Promise<number> {
+    static buildProject(directory: string, options: ProjectBuildOptions = {}): Promise<number> {
         return new Promise((resolve, reject) => {
             // Prepare directories
             if (fs.existsSync(directory)) {
@@ -100,10 +101,13 @@ export class ProjectGenerator extends DataSerializer {
             fs.mkdirSync(directory, { recursive: true });
 
             // Get all class sources
-            if (logLevel > 0) console.log('Generating protocol buffer messages ...');
-            ProjectGenerator.generateProtoMessages(logLevel)
+            if (options.logLevel > 0) {
+                console.log('Generating protocol buffer messages ...');
+                console.log('Use of any types = ', options.useAnyType);
+            }
+            ProjectGenerator.generateProtoMessages(options)
                 .then((classes) => {
-                    if (logLevel > 0) console.log('Saving generating protocol buffer messages ...');
+                    if (options.logLevel > 0) console.log('Saving generating protocol buffer messages ...');
                     classes.forEach((value, key) => {
                         const packageDir = path.join(directory, ...value[0].split('.'));
                         if (!fs.existsSync(packageDir)) {

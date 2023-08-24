@@ -16,10 +16,14 @@ declare module '@openhps/core/dist/types/data/decorators/metadata' {
         protobuf?: {
             messageType?: Type;
             messageTypeEnum?: number;
-            subTypes?: Serializable<any>[];
-            subModules?: Set<string>;
-            type?: Serializable<any>;
             enumMapping?: Map<number, string>;
+            generator?: {
+                subTypes?: Serializable<any>[];
+                subModules?: Set<string>;
+                type?: Serializable<any>;
+                dataMembers?: Map<string, ObjectMemberMetadata>;
+                allowOverride?: boolean;
+            };
         };
     }
 }
