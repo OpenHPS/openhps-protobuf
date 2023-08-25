@@ -23,8 +23,9 @@ export class ObjectGenerator {
         switch (numberType) {
             case NumberType.DECIMAL:
             case NumberType.DOUBLE:
-            case NumberType.FLOAT:
                 return 'double';
+            case NumberType.FLOAT:
+                return 'float';
             case NumberType.LONG:
                 return 'int64';
             case NumberType.INTEGER:
@@ -246,7 +247,7 @@ export class ObjectGenerator {
             }
         }
 
-        let index = 10;
+        let index = 1;
         const members = Array.from(dataMembers.values())
             .map((member) => {
                 const options: any =
