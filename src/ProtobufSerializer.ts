@@ -65,7 +65,10 @@ export class ProtobufSerializer extends DataSerializer {
                                         const enumMapping: Map<number, string> = new Map();
                                         try {
                                             const typeEnum = root.lookupEnum(`${rootMeta.classType.name}Type`);
-                                            Object.keys(typeEnum.values).forEach((key) => {
+                                            Object.keys(typeEnum.values).forEach((key, id) => {
+                                                if (id === 0) {
+                                                    return; // Unspecified
+                                                }
                                                 const otherClassName = typeEnum.valuesOptions[key]['(className)'];
                                                 if (otherClassName === className) {
                                                     enumNumber = typeEnum.values[key];

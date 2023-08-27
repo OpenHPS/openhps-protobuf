@@ -217,6 +217,7 @@ export class ObjectGenerator {
                 imports.push(`import "../../common.proto";`);
                 dataTypesEnum =
                     `\n\nenum ${object.classType.name}Type {\n` +
+                    `\tUNSPECIFIED = 0;\n` +
                     [object.classType, ...object.protobuf.generator.subTypes]
                         .map((type, i) => {
                             return `\t${type.name
@@ -226,7 +227,7 @@ export class ObjectGenerator {
                                 .replace(/(^_)|(_$)/g, '')
                                 .toUpperCase()} = ${Array.from(rootMeta.knownTypes.values()).indexOf(
                                 type,
-                            )} [(className) = '${type.name}', (packageName) = '${type.prototype._module}']`;
+                            ) + 1} [(className) = '${type.name}', (packageName) = '${type.prototype._module}']`;
                         })
                         .join(';\n') +
                     `;\n}\n`;
@@ -253,7 +254,22 @@ export class ObjectGenerator {
                 const options: any =
                     member.options && (member.options as any).protobuf ? (member.options as any).protobuf : {};
                 let type: TypeMapping = undefined;
-                if (member.type() === AnyT) {
+                if (member.name === 'uid') {
+                    // Handle as UUID or string
+                    type = {
+                        syntax: "oneof",
+                        types: [
+                            {
+                                syntax: "string",
+                                name: "uid_string"
+                            },
+                            {
+                                syntax: "bytes",
+                                name: "uid_bytes"
+                            }
+                        ]
+                    };
+                } else if (member.type() === AnyT) {
                     type = {
                         syntax: 'google.protobuf.Any',
                     };
@@ -288,11 +304,19 @@ export class ObjectGenerator {
                     });
                 }
 
-                return `\t${
-                    options.optional && !(type.syntax.includes('<') || type.syntax.includes('repeated'))
-                        ? 'optional '
-                        : ''
-                }${type.syntax} ${member.name} = ${index++};`;
+                if (type.syntax === "oneof") {
+                    return `\toneof ${member.name} {\n`+
+                        type.types.map(subType => {
+                            return `\t\t${subType.syntax} ${subType.name} = ${index++}`;
+                        }).join(";\n") +
+                        `;\n\t}`;
+                } else {
+                    return `\t${
+                        options.optional && !(type.syntax.includes('<') || type.syntax.includes('repeated'))
+                            ? 'optional '
+                            : ''
+                    }${type.syntax} ${member.name} = ${index++};`;
+                }
             })
             .filter((value) => value !== undefined);
 
@@ -323,4 +347,5 @@ export interface TypeMapping {
     syntax: ProtobufPrimitive | string;
     types?: TypeMapping[];
     package?: string;
+    name?: string;
 }

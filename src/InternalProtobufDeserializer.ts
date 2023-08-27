@@ -8,6 +8,7 @@ import {
     Serializable,
     TypeDescriptor,
     TypedJSON,
+    UUID,
 } from '@openhps/core';
 import * as protobuf from 'protobufjs';
 import { AnyT, JsonObjectMetadata } from 'typedjson';
@@ -126,7 +127,8 @@ export class InternalProtobufDeserializer extends Deserializer {
         }
         let expectedSelfType = typeDescriptor.ctor;
         let sourceObjectMetadata: ObjectMetadata = JsonObjectMetadata.getFromConstructor(expectedSelfType);
-        if (sourceObject.hasOwnProperty('_type')) {
+        
+        if (sourceObject.hasOwnProperty('_type') && sourceObject._type !== 0) {
             const enumTypeClassname = sourceObjectMetadata.protobuf.enumMapping.get(sourceObject._type);
             if (enumTypeClassname) {
                 const enumType = knownTypes.get(enumTypeClassname);
@@ -161,16 +163,22 @@ export class InternalProtobufDeserializer extends Deserializer {
             const objMemberDebugName = `${TypedJSON.utils.nameof(sourceMetadata.classType)}.${propKey}`;
             const objMemberOptions = TypedJSON.options.mergeOptions(sourceMetadata.options, objMemberMetadata.options);
 
-            if (!sourceObject.hasOwnProperty(propKey)) {
-                return;
-            }
-
             let revivedValue;
             if (objMemberMetadata.type == null) {
                 throw new TypeError(
                     `Cannot deserialize ${objMemberDebugName} there is` +
                         ` no constructor nor deserialization function to use.`,
                 );
+            } else if (objMemberMetadata.name === "uid") {
+                if (sourceObject.hasOwnProperty('uidBytes') && sourceObject['uidBytes'].byteLength > 0) {
+                    revivedValue = UUID.fromBuffer(sourceObject['uidBytes']).toString();
+                } else if (sourceObject.hasOwnProperty('uidString')) {
+                    revivedValue = sourceObject['uidString'];
+                } else {
+                    return;
+                }
+            } else if (!sourceObject.hasOwnProperty(propKey)) {
+                return;
             } else if (objMemberMetadata.type() === AnyT && sourceObject[objMemberMetadata.name].type_url) {
                 const MessageType = serializerOptions.types.get(
                     sourceObject[objMemberMetadata.name].type_url,

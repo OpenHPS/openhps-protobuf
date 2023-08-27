@@ -7,6 +7,7 @@ import {
     Serializer,
     TypeDescriptor,
     TypedJSON,
+    UUID,
 } from '@openhps/core';
 import { Type } from 'protobufjs';
 import { AnyT, JsonObjectMetadata } from 'typedjson';
@@ -118,6 +119,14 @@ export class InternalProtobufSerializer extends Serializer {
                     `Could not serialize ${objMemberMetadata.name}, there is` +
                         ` no constructor nor serialization function to use.`,
                 );
+            } else if (objMemberMetadata.name === "uid") {
+                const uuid = UUID.fromString(sourceObject[objMemberMetadata.key]);
+                if (uuid) {
+                    targetObject[objMemberMetadata.name + "Bytes"] = uuid.toBuffer();
+                } else {
+                    targetObject[objMemberMetadata.name + "String"] = sourceObject[objMemberMetadata.key];
+                }
+                return;
             } else {
                 const MessageType = sourceTypeMetadata.protobuf.messageType;
                 const field = MessageType.get(objMemberMetadata.name);
