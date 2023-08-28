@@ -13,6 +13,7 @@ export class ProtobufSerializer extends DataSerializer {
         deserializer: new InternalProtobufDeserializer(),
         types: new Map(),
     };
+    protected static root: protobuf.Root;
 
     private static getFiles(directory: string, files: string[] = []): string[] {
         if (!fs.statSync(directory).isDirectory()) {
@@ -37,6 +38,7 @@ export class ProtobufSerializer extends DataSerializer {
      */
     static initialize(directory?: string): Promise<void> {
         return new Promise((resolve, reject) => {
+            ProtobufSerializer.root = new protobuf.Root();
             Promise.resolve(
                 !directory ? (ProjectGenerator.buildProject(path.resolve('tmp')) as any) : Promise.resolve(),
             )
@@ -46,11 +48,9 @@ export class ProtobufSerializer extends DataSerializer {
                     for (const file of files) {
                         promises.push(
                             new Promise((resolveMessage) => {
-                                protobuf.load(file, (err: Error, root) => {
-                                    if (err) {
-                                        err.message += '. In file ' + file;
-                                        return reject(err);
-                                    }
+                                ProtobufSerializer.root.load(file, {
+                                    keepCase: true,
+                                }).then(() => {
                                     const className = path.parse(file).name;
                                     const knownType = this.knownTypes.get(className);
                                     if (knownType) {
@@ -60,11 +60,11 @@ export class ProtobufSerializer extends DataSerializer {
                                         const rootMeta = DataSerializerUtils.getRootMetadata(
                                             this.knownTypes.get(className),
                                         );
-                                        const MessageType = root.lookupType(className);
+                                        const MessageType = ProtobufSerializer.root.lookupType(className);
                                         let enumNumber = undefined;
                                         const enumMapping: Map<number, string> = new Map();
                                         try {
-                                            const typeEnum = root.lookupEnum(`${rootMeta.classType.name}Type`);
+                                            const typeEnum = ProtobufSerializer.root.lookupEnum(`${rootMeta.classType.name}Type`);
                                             Object.keys(typeEnum.values).forEach((key, id) => {
                                                 if (id === 0) {
                                                     return; // Unspecified
@@ -89,6 +89,9 @@ export class ProtobufSerializer extends DataSerializer {
                                         this.options.types.set(className, MessageType);
                                     }
                                     resolveMessage();
+                                }).catch(error => {
+                                    error.message += '. In file ' + file;
+                                    return reject(error);
                                 });
                             }),
                         );

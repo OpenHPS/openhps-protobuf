@@ -8,6 +8,7 @@ import {
     SerializableMemberOptions,
     TypeDescriptor,
     SerializationUtils,
+    Serializable,
     ConcreteTypeDescriptor,
 } from '@openhps/core';
 import chalk from 'chalk';
@@ -173,10 +174,20 @@ export class ObjectGenerator {
                         // Optional
                         memberClone.options.protobuf = {
                             optional: true,
+                            subMembers: new Map()
                         };
                         dataMembersClone.set(key, memberClone);
                     } else if (dataMembers.get(key).type().ctor !== member.type().ctor) {
+                        const memberClone = dataMembersClone.get(member.key);
                         object.protobuf.generator.allowOverride = false;
+                        memberClone.options = memberClone.options ?? {};
+                        memberClone.options.protobuf = memberClone.options.protobuf ?? { subMembers: new Map() };
+                        const subMembers = (memberClone.options.protobuf as any).subMembers ?? new Map();
+                        const memberName = member.name + "_" + member.type().ctor.name.toLowerCase();
+                        subMembers.set(memberName, member);
+                        member.options = member.options ?? {};
+                        member.options.protobuf  = member.options.protobuf ?? {};
+                        member.options.protobuf.name = memberName;
                     }
                 });
             });
@@ -185,8 +196,7 @@ export class ObjectGenerator {
             object.protobuf.generator.subModules = modules;
             if (
                 subTypes.length > 0 &&
-                (modules.size === 1 || !buildOptions.useAnyType) &&
-                object.protobuf.generator.allowOverride
+                (modules.size === 1 || !buildOptions.useAnyType)
             ) {
                 object.protobuf.generator.dataMembers = dataMembersClone;
                 object.protobuf.generator.type = object.protobuf.generator.type ?? object.classType;
@@ -211,8 +221,7 @@ export class ObjectGenerator {
         if (object.knownTypes.size > 1) {
             if (
                 object.protobuf.generator.subTypes.length > 0 &&
-                (object.protobuf.generator.subModules.size === 1 || !buildOptions.useAnyType) &&
-                object.protobuf.generator.allowOverride
+                (object.protobuf.generator.subModules.size === 1 || !buildOptions.useAnyType)
             ) {
                 imports.push(`import "../../common.proto";`);
                 dataTypesEnum =
@@ -254,7 +263,9 @@ export class ObjectGenerator {
                 const options: any =
                     member.options && (member.options as any).protobuf ? (member.options as any).protobuf : {};
                 let type: TypeMapping = undefined;
-                if (member.name === 'uid') {
+                const memberName = options.name ?? member.name;
+
+                if (memberName === 'uid') {
                     // Handle as UUID or string
                     type = {
                         syntax: "oneof",
@@ -270,9 +281,24 @@ export class ObjectGenerator {
                         ]
                     };
                 } else if (member.type() === AnyT) {
-                    type = {
-                        syntax: 'google.protobuf.Any',
-                    };
+                    if (options.subMembers && options.subMembers.size > 0) {
+                        type = {
+                            syntax: "oneof",
+                            types: [...Array.from(options.subMembers.keys()).map((key: string) => {
+                                const subMember = options.subMembers.get(key);
+                                const typeMapping = this.typeMapping(object, subMember.type(), subMember, buildOptions);
+                                typeMapping.name = key;
+                                return typeMapping;
+                            }), {
+                                syntax: 'google.protobuf.Any',
+                                name: memberName + "_" + "any"
+                            }]
+                        };
+                    } else {
+                        type = {
+                            syntax: 'google.protobuf.Any',
+                        };
+                    }
                 } else if (member.serializer && member.type === undefined) {
                     // Custom serializer
                     return undefined;
@@ -305,7 +331,7 @@ export class ObjectGenerator {
                 }
 
                 if (type.syntax === "oneof") {
-                    return `\toneof ${member.name} {\n`+
+                    return `\toneof ${memberName} {\n`+
                         type.types.map(subType => {
                             return `\t\t${subType.syntax} ${subType.name} = ${index++}`;
                         }).join(";\n") +
@@ -315,7 +341,7 @@ export class ObjectGenerator {
                         options.optional && !(type.syntax.includes('<') || type.syntax.includes('repeated'))
                             ? 'optional '
                             : ''
-                    }${type.syntax} ${member.name} = ${index++};`;
+                    }${type.syntax} ${memberName} = ${index++};`;
                 }
             })
             .filter((value) => value !== undefined);

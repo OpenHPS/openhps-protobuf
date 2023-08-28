@@ -10,8 +10,8 @@ export const COMMON =
     HEADER +
     `syntax = "proto3";` +
     `\n\nextend google.protobuf.EnumValueOptions {\n` +
-    `\toptional string className = 1001;\n` +
-    `\toptional string packageName = 1002;\n` +
+    `\toptional string className = 1;\n` +
+    `\toptional string packageName = 2;\n` +
     `}\n`;
 // `\nextend google.protobuf.MessageOptions {\n` +
 // `\toptional string className = 1001;\n` +

@@ -7,6 +7,7 @@ declare module '@openhps/core/dist/types/data/decorators/options' {
     export interface MemberOptionsBase {
         protobuf?: {
             optional?: boolean;
+            name?: string;
         };
     }
 }
@@ -21,7 +22,7 @@ declare module '@openhps/core/dist/types/data/decorators/metadata' {
                 subTypes?: Serializable<any>[];
                 subModules?: Set<string>;
                 type?: Serializable<any>;
-                dataMembers?: Map<string, ObjectMemberMetadata>;
+                dataMembers?: Map<string, ObjectMemberMetadata & { subMembers?: Map<string, ObjectMemberMetadata> }>;
                 allowOverride?: boolean;
             };
         };

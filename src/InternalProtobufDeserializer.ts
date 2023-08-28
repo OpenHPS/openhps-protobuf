@@ -153,40 +153,41 @@ export class InternalProtobufDeserializer extends Deserializer {
 
         // Deserialize by expected properties.
         sourceMetadata.dataMembers.forEach((objMemberMetadata, propKey) => {
-            const objMemberValue = sourceObject[propKey];
             const objMemberDebugName = `${TypedJSON.utils.nameof(sourceMetadata.classType)}.${propKey}`;
             const objMemberOptions = TypedJSON.options.mergeOptions(sourceMetadata.options, objMemberMetadata.options);
-
+            const memberName = (objMemberOptions && objMemberOptions.protobuf ? objMemberOptions.protobuf.name : objMemberMetadata.name) ?? objMemberMetadata.name;
+            const objMemberValue = sourceObject[memberName];
+            
             let revivedValue;
             if (objMemberMetadata.name === "uid") {
-                if (sourceObject.hasOwnProperty('uidBytes') && sourceObject['uidBytes'].byteLength > 0) {
-                    revivedValue = UUID.fromBuffer(sourceObject['uidBytes']).toString();
-                } else if (sourceObject.hasOwnProperty('uidString')) {
-                    revivedValue = sourceObject['uidString'];
+                if (sourceObject.hasOwnProperty('uid_bytes') && sourceObject['uid_bytes'].byteLength > 0) {
+                    revivedValue = UUID.fromBuffer(sourceObject['uid_bytes']).toString();
+                } else if (sourceObject.hasOwnProperty('uid_string')) {
+                    revivedValue = sourceObject['uid_string'];
                 } else {
                     return;
                 }
-            } else if (!sourceObject.hasOwnProperty(propKey)) {
+            } else if (!sourceObject.hasOwnProperty(memberName) || !objMemberValue) {
                 return;
-            } else if (objMemberMetadata.type() === AnyT && sourceObject[objMemberMetadata.name].type_url) {
+            } else if (objMemberMetadata.type() === AnyT && objMemberValue.type_url) {
                 const MessageType = serializerOptions.types.get(
-                    sourceObject[objMemberMetadata.name].type_url,
+                    sourceObject[memberName].type_url,
                 ) as protobuf.Type;
                 if (MessageType) {
-                    const message = MessageType.decode(sourceObject[objMemberMetadata.name].value);
+                    const message = MessageType.decode(objMemberValue.value);
                     revivedValue = deserializer.convertSingleValue(
                         message,
-                        new ConcreteTypeDescriptor(knownTypes.get(sourceObject[objMemberMetadata.name].type_url)),
+                        new ConcreteTypeDescriptor(knownTypes.get(objMemberValue.type_url)),
                         knownTypes,
                         objMemberDebugName,
                         objMemberOptions,
                         serializerOptions,
                     );
-                } else if (sourceObject[objMemberMetadata.name].value) {
+                } else if (objMemberValue.value) {
                     const message = InternalProtobufDeserializer.primitiveWrapper.decode(
-                        sourceObject[objMemberMetadata.name].value,
+                        objMemberValue.value,
                     ) as any;
-                    switch (sourceObject[objMemberMetadata.name].type_url) {
+                    switch (objMemberValue.type_url) {
                         case 'Boolean':
                             revivedValue = Boolean(message.value);
                             break;
@@ -240,6 +241,7 @@ export class InternalProtobufDeserializer extends Deserializer {
                 );
             }
         }
+        
         return targetObject;
     }
 }

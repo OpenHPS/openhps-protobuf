@@ -97,6 +97,12 @@ export class InternalProtobufSerializer extends Serializer {
         sourceMeta.dataMembers.forEach((objMemberMetadata) => {
             const objMemberOptions = TypedJSON.options.mergeOptions(classOptions, objMemberMetadata.options);
             let serialized;
+            let memberName = (objMemberOptions && objMemberOptions.protobuf ? objMemberOptions.protobuf.name : objMemberMetadata.name) ?? objMemberMetadata.name;
+
+            if (sourceObject[objMemberMetadata.key] === undefined) {
+                return;
+            }
+
             if (objMemberMetadata.type == null) {
                 throw new TypeError(
                     `Could not serialize ${objMemberMetadata.name}, there is` +
@@ -105,11 +111,12 @@ export class InternalProtobufSerializer extends Serializer {
             } else if (objMemberMetadata.name === "uid") {
                 const uuid = UUID.fromString(sourceObject[objMemberMetadata.key]);
                 if (uuid) {
-                    targetObject[objMemberMetadata.name + "Bytes"] = uuid.toBuffer();
+                    serialized = uuid.toBuffer();
+                    memberName += "_bytes";
                 } else {
-                    targetObject[objMemberMetadata.name + "String"] = sourceObject[objMemberMetadata.key];
+                    serialized = sourceObject[objMemberMetadata.key];
+                    memberName += "_string";
                 }
-                return;
             } else {
                 const MessageType = sourceTypeMetadata.protobuf.messageType;
                 const field = MessageType.get(objMemberMetadata.name);
@@ -146,7 +153,7 @@ export class InternalProtobufSerializer extends Serializer {
                         };
                     }
                 }
-                targetObject[objMemberMetadata.name] = serialized;
+                targetObject[memberName] = serialized;
             }
         });
 
