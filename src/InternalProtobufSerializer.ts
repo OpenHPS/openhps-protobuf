@@ -18,23 +18,6 @@ export class InternalProtobufSerializer extends Serializer {
 
     constructor() {
         super();
-        // this.setSerializationStrategy(
-        //     Number,
-        //     (
-        //         obj: number,
-        //         typeDescriptor: TypeDescriptor,
-        //         memberName: string,
-        //         serializer: InternalProtobufSerializer,
-        //         memberOptions: SerializableMemberOptions,
-        //     ) => {
-        //         switch (memberOptions.numberType) {
-        //             case NumberType.LONG:
-        //                 return Long.fromNumber(obj);
-        //             default:
-        //                 return obj;
-        //         }
-        //     },
-        // );
         this.setSerializationStrategy(Map, this.convertAsMap.bind(this));
         InternalProtobufSerializer.primitiveWrapper = new protobuf.Type('PrimitiveWrapperMessage');
         InternalProtobufSerializer.primitiveWrapper.add(new protobuf.Field('value', 1, 'string'));
@@ -148,7 +131,7 @@ export class InternalProtobufSerializer extends Serializer {
                         sourceObject[objMemberMetadata.key].constructor.name,
                     ) as protobuf.Type;
                     if (MessageType) {
-                        const message = MessageType.fromObject(serialized);
+                        const message = MessageType.create(serialized);
                         serialized = {
                             type_url: sourceObject[objMemberMetadata.key].constructor.name,
                             value: MessageType.encode(message).finish(),

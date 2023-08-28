@@ -216,7 +216,7 @@ export class ObjectGenerator {
             ) {
                 imports.push(`import "../../common.proto";`);
                 dataTypesEnum =
-                    `\n\nenum ${object.classType.name}Type {\n` +
+                    `\nenum ${object.classType.name}Type {\n` +
                     `\tUNSPECIFIED = 0;\n` +
                     [object.classType, ...object.protobuf.generator.subTypes]
                         .map((type, i) => {
@@ -227,7 +227,7 @@ export class ObjectGenerator {
                                 .replace(/(^_)|(_$)/g, '')
                                 .toUpperCase()} = ${Array.from(rootMeta.knownTypes.values()).indexOf(
                                 type,
-                            ) + 1} [(className) = '${type.name}', (packageName) = '${type.prototype._module}']`;
+                            ) + 1} [\n\t\t(className) = "${type.name}",\n\t\t(packageName) = "${type.prototype._module}"\n\t]`;
                         })
                         .join(';\n') +
                     `;\n}\n`;
@@ -330,6 +330,7 @@ export class ObjectGenerator {
                         return imports.indexOf(value) === idx;
                     })
                     .join('\n') +
+                `\n` +
                 (dataTypesEnum ? dataTypesEnum : '') +
                 `\nmessage ${object.classType.name} {\n` +
                 (rootMeta.protobuf.generator.type

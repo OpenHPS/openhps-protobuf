@@ -119,12 +119,6 @@ export class InternalProtobufDeserializer extends Deserializer {
         memberOptions?: ObjectMemberMetadata,
         serializerOptions?: any,
     ): IndexedObject | T | undefined {
-        if ((typeof sourceObject as any) !== 'object' || (sourceObject as any) === null) {
-            deserializer.getErrorHandler()(
-                new TypeError(`Cannot deserialize ${memberName}: 'sourceObject' must be a defined object.`),
-            );
-            return undefined;
-        }
         let expectedSelfType = typeDescriptor.ctor;
         let sourceObjectMetadata: ObjectMetadata = JsonObjectMetadata.getFromConstructor(expectedSelfType);
         
@@ -164,12 +158,7 @@ export class InternalProtobufDeserializer extends Deserializer {
             const objMemberOptions = TypedJSON.options.mergeOptions(sourceMetadata.options, objMemberMetadata.options);
 
             let revivedValue;
-            if (objMemberMetadata.type == null) {
-                throw new TypeError(
-                    `Cannot deserialize ${objMemberDebugName} there is` +
-                        ` no constructor nor deserialization function to use.`,
-                );
-            } else if (objMemberMetadata.name === "uid") {
+            if (objMemberMetadata.name === "uid") {
                 if (sourceObject.hasOwnProperty('uidBytes') && sourceObject['uidBytes'].byteLength > 0) {
                     revivedValue = UUID.fromBuffer(sourceObject['uidBytes']).toString();
                 } else if (sourceObject.hasOwnProperty('uidString')) {
@@ -220,13 +209,8 @@ export class InternalProtobufDeserializer extends Deserializer {
                 );
             }
 
-            if (
-                TypedJSON.utils.isValueDefined(revivedValue) ||
-                (deserializer.retrievePreserveNull(objMemberOptions) && (revivedValue as any) === null)
-            ) {
+            if (TypedJSON.utils.isValueDefined(revivedValue)) {
                 sourceObjectWithDeserializedProperties[objMemberMetadata.key] = revivedValue;
-            } else if (objMemberMetadata.isRequired === true) {
-                deserializer.getErrorHandler()(new TypeError(`Missing required member '${objMemberDebugName}'.`));
             }
         });
 

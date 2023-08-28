@@ -11,7 +11,8 @@ import {
     Model, 
     ModelBuilder, 
     Orientation, 
-    RelativeDistance
+    RelativeDistance,
+    UUID
 } from '@openhps/core';
 import { ProtobufSerializer } from '../../src';
 import { SocketClient, SocketClientSink, SocketServer, SocketServerSource } from '@openhps/socket';
@@ -19,7 +20,7 @@ import * as http from 'http';
 import { expect } from 'chai';
 
 const dummyFrame = new DataFrame();
-const dummyObject = new DataObject("dummy", "Dummy Data Object");
+const dummyObject = new DataObject(UUID.generate().toString(), "Dummy Data Object");
 dummyObject.addRelativePosition(new RelativeDistance("Test Object", 10, LengthUnit.METER))
 const position = new Absolute3DPosition(1, 2, 3);
 position.velocity.linear = new LinearVelocity(0.1, 0.1, 0.1);
