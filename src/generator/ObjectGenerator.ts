@@ -8,7 +8,6 @@ import {
     SerializableMemberOptions,
     TypeDescriptor,
     SerializationUtils,
-    Serializable,
     ConcreteTypeDescriptor,
 } from '@openhps/core';
 import chalk from 'chalk';

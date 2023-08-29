@@ -6,23 +6,40 @@ import {
     DataFrame, 
     DataObject, 
     DataSerializer, 
+    LengthUnit, 
     LinearVelocity, 
     Model, 
     ModelBuilder, 
-    Orientation 
+    Orientation,
+    RelativeDistance,
+    UUID
 } from '@openhps/core';
 import { ProtobufSerializer } from '../../src';
 import { MQTTClient, MQTTSourceNode, MQTTServer, MQTTSinkNode } from '@openhps/mqtt';
 
 const dummyFrame = new DataFrame();
-const dummyObject = new DataObject("dummy", "Dummy Data Object");
+const dummyObject = new DataObject(UUID.generate().toString(), "Dummy Data Object");
+dummyObject.addRelativePosition(new RelativeDistance("Test Object", 10, LengthUnit.METER))
 const position = new Absolute3DPosition(1, 2, 3);
 position.velocity.linear = new LinearVelocity(0.1, 0.1, 0.1);
+position.velocity.linear.setAccuracy(1);
 position.velocity.angular = new AngularVelocity(0.1, 0.1, 0.1);
+position.velocity.linear.setAccuracy(1);
 position.orientation = new Orientation(1, 2, 3, 1);
 dummyObject.setPosition(position);
 dummyFrame.source = dummyObject;
-dummyFrame.addObject(dummyObject);
+
+const max = 100;
+
+const frames = new Map<number, DataFrame>();
+frames.set(0, dummyFrame);
+for (let i = 1 ; i < max ; i ++) {
+    const frameClone = frames.get(i - 1).clone();
+    const clone = dummyObject.clone();
+    clone.uid = String(i);
+    frameClone.addObject(clone);
+    frames.set(i, frameClone);
+}
 
 const suite = new Suite();
 const settings: Options = {
@@ -46,8 +63,11 @@ function buildModels(): Promise<void> {
             }))
             .from(new MQTTSourceNode({
                 uid: "source",
-                serialize: (obj) => ProtobufSerializer.serialize(obj),
-                deserialize: (obj) => ProtobufSerializer.deserialize(obj)
+                serialize: (obj, options) => ({
+                    frame: ProtobufSerializer.serialize(obj),
+                    options
+                }),
+                deserialize: (obj) => ProtobufSerializer.deserialize(obj.frame)
             }))
             .to(sink2)
             .build().then(model => {
@@ -59,8 +79,11 @@ function buildModels(): Promise<void> {
                     .from()
                     .to(new MQTTSinkNode({
                         uid: "source",
-                        serialize: (obj) => ProtobufSerializer.serialize(obj),
-                        deserialize: (obj) => ProtobufSerializer.deserialize(obj)
+                        serialize: (obj, options) => ({
+                            frame: ProtobufSerializer.serialize(obj),
+                            options
+                        }),
+                        deserialize: (obj) => ProtobufSerializer.deserialize(obj.frame)
                     }))
                     .build();
             }).then(model => {
@@ -98,7 +121,12 @@ ProtobufSerializer.initialize().then(() => {
     console.log("JSON length", Buffer.from(JSON.stringify(DataSerializer.serialize(dummyFrame))).byteLength);
     console.log("Protobuf length", ProtobufSerializer.serialize(dummyFrame).byteLength);
 
-    ProtobufSerializer.deserialize(ProtobufSerializer.serialize(dummyFrame));
+    const serialized = ProtobufSerializer.serialize(dummyFrame);
+    const deserialized = ProtobufSerializer.deserialize(serialized);
+    const compare1 = JSON.stringify(DataSerializer.serialize(deserialized));
+    const compare2 = JSON.stringify(DataSerializer.serialize(dummyFrame));
+    // console.log(compare1, "\n\n", compare2)
+    // expect(compare1).to.eql(compare2);
     
     console.log("Building models ...");
     return buildModels();
@@ -108,15 +136,18 @@ ProtobufSerializer.initialize().then(() => {
     clientModel2.on('error', console.error);
     serverModel1.on('error', console.error);
     serverModel2.on('error', console.error);
-    suite.add("dataserializer#mqtt", (deferred: Deferred) => {
-        sink1.callback = () => deferred.resolve();
-        clientModel1.push(dummyFrame);
-    }, settings)
-    .add("protobufserializer#mqtt", (deferred: Deferred) => {
-        sink2.callback = () => deferred.resolve();
-        clientModel2.push(dummyFrame);
-    }, settings)
-    .on('cycle', function(event: any) {
+    for (let i = 0 ; i < max ; i += 10) {
+        suite.add(`dataserializer#mqtt (${i})`, (deferred: Deferred) => {
+            sink1.callback = () => deferred.resolve();
+            clientModel1.push(frames.get(i));
+        }, settings)
+        .add(`protobufserializer#mqtt (${i})`, (deferred: Deferred) => {
+            sink2.callback = () => deferred.resolve();
+            clientModel2.push(frames.get(i));
+        }, settings);
+    }
+
+    suite.on('cycle', function(event: any) {
         console.log(String(event.target));
     })
     .run();
