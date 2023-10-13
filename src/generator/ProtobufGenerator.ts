@@ -21,7 +21,7 @@ export abstract class ProtobufGenerator<T> {
 
     abstract processObject(object: Constructor<T>, metaData: ObjectMemberMetadata): Promise<void>;
 
-    abstract generate(object: Constructor<T>, metaData: ObjectMemberMetadata): Promise<ProtoMessage>;
+    abstract generate(object: Constructor<T>, metaData: ObjectMemberMetadata): Promise<ProtobufMessage>;
 }
 
 export interface ProtobufMessage {

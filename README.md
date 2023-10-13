@@ -107,8 +107,41 @@ message Absolute3DPosition {
 
 ```
 
-### Socket
+### @openhps/socket
+```ts
+ModelBuilder.create()
+	.addService(new SocketServer({
+		srv: server,
+		path: "/api/v1"
+	}))
+	.from(new SocketServerSource({
+		uid: "source",
+		// Override serializer and deserializer with protocol buffer
+		serialize: (obj) => ProtobufSerializer.serialize(obj),
+		deserialize: (obj) => ProtobufSerializer.deserialize(obj)
+	}))
+	.to()
+	.build();
+```
 
+### @openhps/mqtt
+```ts
+ModelBuilder.create()
+	.addService(new MQTTServer({
+		port: 1443,
+	}))
+	.from(new MQTTSourceNode({
+		uid: "source",
+		// Override frame serializer (not the options)
+		serialize: (obj, options) => ({
+			frame: ProtobufSerializer.serialize(obj),
+			options
+		}),
+		deserialize: (obj) => ProtobufSerializer.deserialize(obj.frame)
+	}))
+	.to()
+	.build();
+```
 
 ## Getting Started
 If you have [npm installed](https://www.npmjs.com/get-npm), start using @openhps/protobuf with the following command.
