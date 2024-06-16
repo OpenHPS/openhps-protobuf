@@ -14,7 +14,7 @@ import chalk from 'chalk';
 import { INamespace } from 'protobufjs';
 import { AnyT, Constructor } from 'typedjson';
 import { HEADER } from './constants';
-import { ProtobufGenerator } from './ProtobufGenerator';
+import { ProtobufGenerator, ProtobufMessage } from './ProtobufGenerator';
 import { ProjectBuildOptions } from './types';
 
 /**
@@ -25,7 +25,8 @@ export class ObjectGenerator extends ProtobufGenerator<Object> {
     processObject(object: Constructor<Object>, metaData: ObjectMemberMetadata): Promise<void> {
         throw new Error('Method not implemented.');
     }
-    generate(object: Constructor<Object>, metaData: ObjectMemberMetadata): Promise<INamespace> {
+
+    generate(object: Constructor<Object>, metaData: ObjectMemberMetadata): Promise<ProtobufMessage> {
         throw new Error('Method not implemented.');
     }
 

@@ -121,7 +121,6 @@ export class InternalProtobufDeserializer extends Deserializer {
     ): IndexedObject | T | undefined {
         let expectedSelfType = typeDescriptor.ctor;
         let sourceObjectMetadata: ObjectMetadata = JsonObjectMetadata.getFromConstructor(expectedSelfType);
-        
         if (sourceObject.hasOwnProperty('_type') && sourceObject._type !== 0) {
             const enumTypeClassname = sourceObjectMetadata.protobuf.enumMapping.get(sourceObject._type);
             if (enumTypeClassname) {

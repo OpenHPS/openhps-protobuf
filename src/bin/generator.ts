@@ -117,9 +117,9 @@ function test(): Promise<void> {
                 expect(deserialized).to.not.be.undefined;
                 const compare1 = JSON.stringify(DataSerializer.serialize(deserialized), null, 2);
                 const compare2 = JSON.stringify(DataSerializer.serialize(frame), null, 2);
-                console.log(compare1);
-                console.log('\n');
-                console.log(compare2);
+                // console.log(compare1);
+                // console.log('\n');
+                // console.log(compare2);
                 expect(compare1).to.eql(compare2);
                 console.log(chalk.green(`Basic serialization and deserialization test completed!`));
                 resolve();

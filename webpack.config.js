@@ -11,6 +11,7 @@ const defaultConfig = env => ({
   resolve: {
     alias: {
       typescript: false,
+      'graceful-fs': false,
     },
     fallback: {
       path: false,

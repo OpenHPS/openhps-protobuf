@@ -107,8 +107,41 @@ message Absolute3DPosition {
 
 ```
 
-### Socket
+### @openhps/socket
+```ts
+ModelBuilder.create()
+	.addService(new SocketServer({
+		srv: server,
+		path: "/api/v1"
+	}))
+	.from(new SocketServerSource({
+		uid: "source",
+		// Override serializer and deserializer with protocol buffer
+		serialize: (obj) => ProtobufSerializer.serialize(obj),
+		deserialize: (obj) => ProtobufSerializer.deserialize(obj)
+	}))
+	.to()
+	.build();
+```
 
+### @openhps/mqtt
+```ts
+ModelBuilder.create()
+	.addService(new MQTTServer({
+		port: 1443,
+	}))
+	.from(new MQTTSourceNode({
+		uid: "source",
+		// Override frame serializer (not the options)
+		serialize: (obj, options) => ({
+			frame: ProtobufSerializer.serialize(obj),
+			options
+		}),
+		deserialize: (obj) => ProtobufSerializer.deserialize(obj.frame)
+	}))
+	.to()
+	.build();
+```
 
 ## Getting Started
 If you have [npm installed](https://www.npmjs.com/get-npm), start using @openhps/protobuf with the following command.
@@ -123,7 +156,7 @@ The framework is open source and is mainly developed by PhD Student Maxim Van de
 Use of OpenHPS, contributions and feedback is highly appreciated. Please read our [contributing guidelines](CONTRIBUTING.md) for more information.
 
 ## License
-Copyright (C) 2019-2023 Maxim Van de Wynckel & Vrije Universiteit Brussel
+Copyright (C) 2019-2024 Maxim Van de Wynckel & Vrije Universiteit Brussel
 
 Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with the License. You may obtain a copy of the License at
 
