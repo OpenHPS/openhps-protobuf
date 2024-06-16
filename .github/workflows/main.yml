@@ -133,7 +133,7 @@ jobs:
           path: |
             docs/out/*
       - name: Deploy site to GitHub
-        if: github.ref == 'refs/heads/master' && success()
+        if: github.ref == 'refs/heads/main' && success()
         uses: peaceiris/actions-gh-pages@v3
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
@@ -202,14 +202,14 @@ jobs:
         run: |
           git push
   
-  release_master:
+  release_main:
     name: Release MASTER
     needs:
       - build
       - quality
       - test_coverage
     runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/master'
+    if: github.ref == 'refs/heads/main'
     steps:
       - uses: actions/checkout@v3
       - name: Load dependency cache
@@ -231,7 +231,7 @@ jobs:
       - name: Bump version release
         run: |
           npm run bump:release
-      - name: Publish to NPM (master)
+      - name: Publish to NPM (main)
         uses: JS-DevTools/npm-publish@v1
         with:
           token: ${{ secrets.NPM_TOKEN }}
