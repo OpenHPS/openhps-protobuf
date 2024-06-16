@@ -102,7 +102,10 @@ export class ProtobufSerializer extends DataSerializer {
                     this.wrapperMessage.addJSON(protobuf.common['google/protobuf/any.proto'].nested);
                     return Promise.all(promises);
                 })
-                .then(() => resolve())
+                .then(() => {
+                    console.log(ProtobufSerializer.root.toJSON())
+                    resolve()
+                })
                 .catch(reject);
         });
     }

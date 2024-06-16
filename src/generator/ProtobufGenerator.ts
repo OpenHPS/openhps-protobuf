@@ -1,8 +1,18 @@
 import { Constructor, NumberType, ObjectMemberMetadata } from "@openhps/core";
+import { INamespace } from "protobufjs";
 
 export abstract class ProtobufGenerator<T> {
+    protected options: ProtobufGeneratorOptions;
+    /**
+     * Logger
+     */
+    logger: (level: string, message: any) => void = () => {};
 
-    protected static getNumberType(numberType: NumberType): string {
+    constructor(options?: ProtobufGeneratorOptions) {
+        this.options = options;
+    }
+
+    protected getNumberType(numberType: NumberType): string {
         switch (numberType) {
             case NumberType.DECIMAL:
             case NumberType.DOUBLE:
@@ -21,12 +31,16 @@ export abstract class ProtobufGenerator<T> {
 
     abstract processObject(object: Constructor<T>, metaData: ObjectMemberMetadata): Promise<void>;
 
-    abstract generate(object: Constructor<T>, metaData: ObjectMemberMetadata): Promise<ProtoMessage>;
+    abstract generate(object: Constructor<T>, metaData: ObjectMemberMetadata): Promise<INamespace>;
+
+    static stringify(namespace: INamespace): string {
+
+    }
+
 }
 
-export interface ProtobufMessage {
-    body: string;
-    namespace: string;
+export interface ProtobufGeneratorOptions {
+    
 }
 
 export type ProtobufPrimitive = 'string' | 'int32' | 'bool' | 'bytes';

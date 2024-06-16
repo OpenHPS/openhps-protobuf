@@ -11,29 +11,22 @@ import {
     ConcreteTypeDescriptor,
 } from '@openhps/core';
 import chalk from 'chalk';
-import { AnyT } from 'typedjson';
+import { INamespace } from 'protobufjs';
+import { AnyT, Constructor } from 'typedjson';
 import { HEADER } from './constants';
+import { ProtobufGenerator } from './ProtobufGenerator';
 import { ProjectBuildOptions } from './types';
 
 /**
  * Protobuf object generator
  */
-export class ObjectGenerator {
-    protected static numberTypeMapping(numberType: NumberType): string {
-        switch (numberType) {
-            case NumberType.DECIMAL:
-            case NumberType.DOUBLE:
-                return 'double';
-            case NumberType.FLOAT:
-                return 'float';
-            case NumberType.LONG:
-                return 'int64';
-            case NumberType.INTEGER:
-            case NumberType.SHORT:
-                return 'int32';
-            default:
-                return 'string';
-        }
+export class ObjectGenerator extends ProtobufGenerator<Object> {
+
+    processObject(object: Constructor<Object>, metaData: ObjectMemberMetadata): Promise<void> {
+        throw new Error('Method not implemented.');
+    }
+    generate(object: Constructor<Object>, metaData: ObjectMemberMetadata): Promise<INamespace> {
+        throw new Error('Method not implemented.');
     }
 
     protected static typeMapping(
@@ -49,7 +42,7 @@ export class ObjectGenerator {
                 };
             case Number: {
                 const options: SerializableMemberOptions = memberOptions.options;
-                const numberType = options ? this.numberTypeMapping(options.numberType) : 'int32';
+                const numberType = options ? this.getNumberType(options.numberType) : 'int32';
                 if (numberType === 'string' && buildOptions.logLevel > 1) {
                     console.warn(
                         chalk.yellow(

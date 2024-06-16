@@ -1,5 +1,6 @@
-import { ProtoGenerator } from "./ProtoGenerator";
+import { Service } from "@openhps/core";
+import { ProtobufGenerator } from "./ProtobufGenerator";
 
-export class ServiceGenerator extends ProtoGenerator {
+export class ServiceGenerator extends ProtobufGenerator<Service> {
 
 }
