@@ -21,6 +21,7 @@ module.exports = {
         "import/no-cycle": "error",
         "import/no-unresolved": "off",
         "prettier/prettier": ["error"],
+        "no-prototype-builtins": "off",
         "jsdoc/check-tag-names": ["error", { "definedTags": ["category"] }],
     },
     "extends": [

@@ -1,4 +1,4 @@
-import { Constructor, DataSerializer, DataSerializerConfig, DataSerializerUtils, Serializable } from '@openhps/core';
+import { Constructor, DataSerializer, DataSerializerConfig, DataSerializerUtils } from '@openhps/core';
 import * as path from 'path';
 import * as protobuf from 'protobufjs';
 import * as fs from 'fs';
@@ -45,52 +45,57 @@ export class ProtobufSerializer extends DataSerializer {
                 .then(() => {
                     const files = this.getFiles(path.resolve(directory ?? 'tmp'));
                     const loadPromise: Promise<void> = new Promise((resolve) => {
-                        ProtobufSerializer.root.load(files, {
-                            keepCase: true,
-                        }).then(() => {
-                            files.forEach(file => {
-                                const className = path.parse(file).name;
-                                const knownType = this.knownTypes.get(className);
-                                if (knownType) {
-                                    const objectMeta = DataSerializerUtils.getOwnMetadata(
-                                        this.knownTypes.get(className),
-                                    );
-                                    const rootMeta = DataSerializerUtils.getRootMetadata(
-                                        this.knownTypes.get(className),
-                                    );
-                                    const MessageType = ProtobufSerializer.root.lookupType(className);
-                                    let enumNumber = undefined;
-                                    const enumMapping: Map<number, string> = new Map();
-                                    try {
-                                        const typeEnum = ProtobufSerializer.root.lookupEnum(`${rootMeta.classType.name}Type`);
-                                        Object.keys(typeEnum.values).forEach((key, id) => {
-                                            if (id === 0) {
-                                                return; // Unspecified
-                                            }
-                                            const otherClassName = typeEnum.valuesOptions[key]['(className)'];
-                                            if (otherClassName === className) {
-                                                enumNumber = typeEnum.values[key];
-                                            }
-                                            enumMapping.set(
-                                                typeEnum.values[key],
-                                                typeEnum.valuesOptions[key]['(className)'],
+                        ProtobufSerializer.root
+                            .load(files, {
+                                keepCase: true,
+                            })
+                            .then(() => {
+                                files.forEach((file) => {
+                                    const className = path.parse(file).name;
+                                    const knownType = this.knownTypes.get(className);
+                                    if (knownType) {
+                                        const objectMeta = DataSerializerUtils.getOwnMetadata(
+                                            this.knownTypes.get(className),
+                                        );
+                                        const rootMeta = DataSerializerUtils.getRootMetadata(
+                                            this.knownTypes.get(className),
+                                        );
+                                        const MessageType = ProtobufSerializer.root.lookupType(className);
+                                        let enumNumber = undefined;
+                                        const enumMapping: Map<number, string> = new Map();
+                                        try {
+                                            const typeEnum = ProtobufSerializer.root.lookupEnum(
+                                                `${rootMeta.classType.name}Type`,
                                             );
-                                        });
-                                    } catch (ex) {
-                                        // Ignore :')
+                                            Object.keys(typeEnum.values).forEach((key, id) => {
+                                                if (id === 0) {
+                                                    return; // Unspecified
+                                                }
+                                                const otherClassName = typeEnum.valuesOptions[key]['(className)'];
+                                                if (otherClassName === className) {
+                                                    enumNumber = typeEnum.values[key];
+                                                }
+                                                enumMapping.set(
+                                                    typeEnum.values[key],
+                                                    typeEnum.valuesOptions[key]['(className)'],
+                                                );
+                                            });
+                                        } catch (ex) {
+                                            // Ignore :')
+                                        }
+                                        objectMeta.protobuf = {
+                                            messageType: MessageType,
+                                            messageTypeEnum: enumNumber,
+                                            enumMapping,
+                                        };
+                                        this.options.types.set(className, MessageType);
                                     }
-                                    objectMeta.protobuf = {
-                                        messageType: MessageType,
-                                        messageTypeEnum: enumNumber,
-                                        enumMapping,
-                                    };
-                                    this.options.types.set(className, MessageType);
-                                }
+                                });
+                                resolve();
+                            })
+                            .catch((error) => {
+                                return reject(error);
                             });
-                            resolve();
-                        }).catch(error => {
-                            return reject(error);
-                        });
                     });
 
                     this.wrapperMessage = new protobuf.Type('WrapperMessage');
@@ -99,8 +104,8 @@ export class ProtobufSerializer extends DataSerializer {
                     return loadPromise;
                 })
                 .then(() => {
-                    console.log(ProtobufSerializer.root.toJSON())
-                    resolve()
+                    console.log(ProtobufSerializer.root.toJSON());
+                    resolve();
                 })
                 .catch(reject);
         });

@@ -2,7 +2,6 @@ import {
     ArrayTypeDescriptor,
     DataSerializerUtils,
     MapTypeDescriptor,
-    NumberType,
     ObjectMemberMetadata,
     ObjectMetadata,
     SerializableMemberOptions,
@@ -11,7 +10,6 @@ import {
     ConcreteTypeDescriptor,
 } from '@openhps/core';
 import chalk from 'chalk';
-import { INamespace } from 'protobufjs';
 import { AnyT, Constructor } from 'typedjson';
 import { HEADER } from './constants';
 import { ProtobufGenerator, ProtobufMessage } from './ProtobufGenerator';
@@ -20,13 +18,12 @@ import { ProjectBuildOptions } from './types';
 /**
  * Protobuf object generator
  */
-export class ObjectGenerator extends ProtobufGenerator<Object> {
-
-    processObject(object: Constructor<Object>, metaData: ObjectMemberMetadata): Promise<void> {
+export class ObjectGenerator extends ProtobufGenerator<Object> { // eslint-disable-line
+    processObject(object: Constructor<Object>, metaData: ObjectMemberMetadata): Promise<void> { // eslint-disable-line
         throw new Error('Method not implemented.');
     }
 
-    generate(object: Constructor<Object>, metaData: ObjectMemberMetadata): Promise<ProtobufMessage> {
+    generate(object: Constructor<Object>, metaData: ObjectMemberMetadata): Promise<ProtobufMessage> { // eslint-disable-line
         throw new Error('Method not implemented.');
     }
 
@@ -167,7 +164,7 @@ export class ObjectGenerator extends ProtobufGenerator<Object> {
                         // Optional
                         memberClone.options.protobuf = {
                             optional: true,
-                            subMembers: new Map()
+                            subMembers: new Map(),
                         };
                         dataMembersClone.set(key, memberClone);
                     } else if (dataMembers.get(key).type().ctor !== member.type().ctor) {
@@ -176,10 +173,10 @@ export class ObjectGenerator extends ProtobufGenerator<Object> {
                         memberClone.options = memberClone.options ?? {};
                         memberClone.options.protobuf = memberClone.options.protobuf ?? { subMembers: new Map() };
                         const subMembers = (memberClone.options.protobuf as any).subMembers ?? new Map();
-                        const memberName = member.name + "_" + member.type().ctor.name.toLowerCase();
+                        const memberName = member.name + '_' + member.type().ctor.name.toLowerCase();
                         subMembers.set(memberName, member);
                         member.options = member.options ?? {};
-                        member.options.protobuf  = member.options.protobuf ?? {};
+                        member.options.protobuf = member.options.protobuf ?? {};
                         member.options.protobuf.name = memberName;
                     }
                 });
@@ -187,10 +184,7 @@ export class ObjectGenerator extends ProtobufGenerator<Object> {
 
             object.protobuf.generator.subTypes = subTypes;
             object.protobuf.generator.subModules = modules;
-            if (
-                subTypes.length > 0 &&
-                (modules.size === 1 || !buildOptions.useAnyType)
-            ) {
+            if (subTypes.length > 0 && (modules.size === 1 || !buildOptions.useAnyType)) {
                 object.protobuf.generator.dataMembers = dataMembersClone;
                 object.protobuf.generator.type = object.protobuf.generator.type ?? object.classType;
                 subTypes.forEach((type) => {
@@ -221,15 +215,15 @@ export class ObjectGenerator extends ProtobufGenerator<Object> {
                     `\nenum ${object.classType.name}Type {\n` +
                     `\tUNSPECIFIED = 0;\n` +
                     [object.classType, ...object.protobuf.generator.subTypes]
-                        .map((type, i) => {
+                        .map((type) => {
                             return `\t${type.name
                                 .replace(/(?:^|\.?)(([A-Z0-9][a-z0-9]|$)|([0-9]+[A-Z]))/g, (_, y) => {
                                     return '_' + y;
                                 })
                                 .replace(/(^_)|(_$)/g, '')
-                                .toUpperCase()} = ${Array.from(rootMeta.knownTypes.values()).indexOf(
-                                type,
-                            ) + 1} [\n\t\t(className) = "${type.name}",\n\t\t(packageName) = "${type.prototype._module}"\n\t]`;
+                                .toUpperCase()} = ${
+                                Array.from(rootMeta.knownTypes.values()).indexOf(type) + 1
+                            } [\n\t\t(className) = "${type.name}",\n\t\t(packageName) = "${type.prototype._module}"\n\t]`;
                         })
                         .join(';\n') +
                     `;\n}\n`;
@@ -261,31 +255,39 @@ export class ObjectGenerator extends ProtobufGenerator<Object> {
                 if (memberName === 'uid') {
                     // Handle as UUID or string
                     type = {
-                        syntax: "oneof",
+                        syntax: 'oneof',
                         types: [
                             {
-                                syntax: "string",
-                                name: "uid_string"
+                                syntax: 'string',
+                                name: 'uid_string',
                             },
                             {
-                                syntax: "bytes",
-                                name: "uid_bytes"
-                            }
-                        ]
+                                syntax: 'bytes',
+                                name: 'uid_bytes',
+                            },
+                        ],
                     };
                 } else if (member.type() === AnyT) {
                     if (options.subMembers && options.subMembers.size > 0) {
                         type = {
-                            syntax: "oneof",
-                            types: [...Array.from(options.subMembers.keys()).map((key: string) => {
-                                const subMember = options.subMembers.get(key);
-                                const typeMapping = this.typeMapping(object, subMember.type(), subMember, buildOptions);
-                                typeMapping.name = key;
-                                return typeMapping;
-                            }), {
-                                syntax: 'google.protobuf.Any',
-                                name: memberName + "_" + "any"
-                            }]
+                            syntax: 'oneof',
+                            types: [
+                                ...Array.from(options.subMembers.keys()).map((key: string) => {
+                                    const subMember = options.subMembers.get(key);
+                                    const typeMapping = this.typeMapping(
+                                        object,
+                                        subMember.type(),
+                                        subMember,
+                                        buildOptions,
+                                    );
+                                    typeMapping.name = key;
+                                    return typeMapping;
+                                }),
+                                {
+                                    syntax: 'google.protobuf.Any',
+                                    name: memberName + '_' + 'any',
+                                },
+                            ],
                         };
                     } else {
                         type = {
@@ -323,12 +325,16 @@ export class ObjectGenerator extends ProtobufGenerator<Object> {
                     });
                 }
 
-                if (type.syntax === "oneof") {
-                    return `\toneof ${memberName} {\n`+
-                        type.types.map(subType => {
-                            return `\t\t${subType.syntax} ${subType.name} = ${index++}`;
-                        }).join(";\n") +
-                        `;\n\t}`;
+                if (type.syntax === 'oneof') {
+                    return (
+                        `\toneof ${memberName} {\n` +
+                        type.types
+                            .map((subType) => {
+                                return `\t\t${subType.syntax} ${subType.name} = ${index++}`;
+                            })
+                            .join(';\n') +
+                        `;\n\t}`
+                    );
                 } else {
                     return `\t${
                         options.optional && !(type.syntax.includes('<') || type.syntax.includes('repeated'))

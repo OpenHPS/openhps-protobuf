@@ -154,11 +154,14 @@ export class InternalProtobufDeserializer extends Deserializer {
         sourceMetadata.dataMembers.forEach((objMemberMetadata, propKey) => {
             const objMemberDebugName = `${TypedJSON.utils.nameof(sourceMetadata.classType)}.${propKey}`;
             const objMemberOptions = TypedJSON.options.mergeOptions(sourceMetadata.options, objMemberMetadata.options);
-            const memberName = (objMemberOptions && objMemberOptions.protobuf ? objMemberOptions.protobuf.name : objMemberMetadata.name) ?? objMemberMetadata.name;
+            const memberName =
+                (objMemberOptions && objMemberOptions.protobuf
+                    ? objMemberOptions.protobuf.name
+                    : objMemberMetadata.name) ?? objMemberMetadata.name;
             const objMemberValue = sourceObject[memberName];
-            
+
             let revivedValue;
-            if (objMemberMetadata.name === "uid") {
+            if (objMemberMetadata.name === 'uid') {
                 if (sourceObject.hasOwnProperty('uid_bytes') && sourceObject['uid_bytes'].byteLength > 0) {
                     revivedValue = UUID.fromBuffer(sourceObject['uid_bytes']).toString();
                 } else if (sourceObject.hasOwnProperty('uid_string')) {
@@ -169,9 +172,7 @@ export class InternalProtobufDeserializer extends Deserializer {
             } else if (!sourceObject.hasOwnProperty(memberName) || !objMemberValue) {
                 return;
             } else if (objMemberMetadata.type() === AnyT && objMemberValue.type_url) {
-                const MessageType = serializerOptions.types.get(
-                    sourceObject[memberName].type_url,
-                ) as protobuf.Type;
+                const MessageType = serializerOptions.types.get(sourceObject[memberName].type_url) as protobuf.Type;
                 if (MessageType) {
                     const message = MessageType.decode(objMemberValue.value);
                     revivedValue = deserializer.convertSingleValue(
@@ -183,9 +184,7 @@ export class InternalProtobufDeserializer extends Deserializer {
                         serializerOptions,
                     );
                 } else if (objMemberValue.value) {
-                    const message = InternalProtobufDeserializer.primitiveWrapper.decode(
-                        objMemberValue.value,
-                    ) as any;
+                    const message = InternalProtobufDeserializer.primitiveWrapper.decode(objMemberValue.value) as any;
                     switch (objMemberValue.type_url) {
                         case 'Boolean':
                             revivedValue = Boolean(message.value);
@@ -240,7 +239,7 @@ export class InternalProtobufDeserializer extends Deserializer {
                 );
             }
         }
-        
+
         return targetObject;
     }
 }

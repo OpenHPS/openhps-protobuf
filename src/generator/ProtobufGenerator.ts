@@ -1,4 +1,4 @@
-import { Constructor, NumberType, ObjectMemberMetadata } from "@openhps/core";
+import { Constructor, NumberType, ObjectMemberMetadata } from '@openhps/core';
 
 export abstract class ProtobufGenerator<T> {
     protected options: ProtobufGeneratorOptions;
@@ -33,9 +33,7 @@ export abstract class ProtobufGenerator<T> {
     abstract generate(object: Constructor<T>, metaData: ObjectMemberMetadata): Promise<ProtobufMessage>;
 }
 
-export interface ProtobufGeneratorOptions {
-    
-}
+export interface ProtobufGeneratorOptions {}
 
 export interface ProtobufMessage {
     body: string;
