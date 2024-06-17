@@ -104,7 +104,6 @@ export class ProtobufSerializer extends DataSerializer {
                     return loadPromise;
                 })
                 .then(() => {
-                    console.log(ProtobufSerializer.root.toJSON());
                     resolve();
                 })
                 .catch(reject);

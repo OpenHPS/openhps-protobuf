@@ -2,7 +2,7 @@ export const HEADER = `/**
  * OpenHPS Protocol Buffer 
  *  This file was automatically generated with @openhps/protobuf
  * 
- * (c) 2019-2023 Maxim Van de Wynckel & Vrije Universiteit Brussel
+ * (c) 2019-2024 Maxim Van de Wynckel & Vrije Universiteit Brussel
  **/\n
 `;
 

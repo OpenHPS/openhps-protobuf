@@ -13,6 +13,36 @@ export class ProjectGenerator extends DataSerializer {
     private static _modules: Set<string> = new Set();
     private static _packages: Set<string> = new Set();
 
+    static findAllModules(dir: string): NodeModule[] {
+        const packageFile = path.resolve(path.join(dir, 'package.json'));
+        if (packageFile === path.resolve(require.main?.path)) {
+            return [];
+        }
+
+        if (fs.existsSync(packageFile)) {
+            const packageJson = JSON.parse(fs.readFileSync(packageFile, { encoding: 'utf-8' }));
+            const dependencies = packageJson.dependencies;
+            const devDependencies = packageJson.devDependencies;
+
+            // Combine dependencies and devDependencies
+            const allDependencies = { ...dependencies, ...devDependencies };
+
+            // Get the names of all modules
+            const allModuleNames = Object.keys(allDependencies);
+            const allModules = allModuleNames
+                .map((name) => {
+                    try {
+                        require(name);
+                        return require.cache[require.resolve(name)];
+                    } catch (error) {
+                        return null;
+                    }
+                })
+                .filter(Boolean) as NodeModule[];
+            return allModules;
+        }
+    }
+
     static findModule(dir: string): string {
         const packageFile = path.join(dir, 'package.json');
         if (fs.existsSync(packageFile)) {
@@ -32,13 +62,15 @@ export class ProjectGenerator extends DataSerializer {
             return;
         }
         this._modules.add(module.id);
-        Object.keys(module.exports).forEach((key) => {
-            const childModule = module.exports[key];
-            if (objects.includes(childModule)) {
-                childModule.prototype._module = this.findModule(path.dirname(require.resolve(module.id)));
-                this._packages.add(childModule.prototype._module);
-            }
-        });
+        if (module.exports) {
+            Object.keys(module.exports).forEach((key) => {
+                const childModule = module.exports[key];
+                if (objects.includes(childModule)) {
+                    childModule.prototype._module = this.findModule(path.dirname(require.resolve(module.id)));
+                    this._packages.add(childModule.prototype._module);
+                }
+            });
+        }
         module.children.forEach((module) => {
             if (!this._modules.has(module.id)) {
                 this.loadModules(objects, module);
@@ -55,6 +87,7 @@ export class ProjectGenerator extends DataSerializer {
 
     static loadClasses(): Array<ObjectMetadata> {
         const declarations: Array<ObjectMetadata> = [];
+        this.findAllModules('./');
         this.knownTypes.forEach((value) => {
             const metadata = DataSerializerUtils.getOwnMetadata(value);
             if (metadata) {

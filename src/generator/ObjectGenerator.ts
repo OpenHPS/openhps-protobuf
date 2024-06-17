@@ -35,6 +35,7 @@ export class ObjectGenerator extends ProtobufGenerator<Object> { // eslint-disab
     ): TypeMapping {
         switch (type.ctor) {
             case String:
+            case Date:
                 return {
                     syntax: 'string',
                 };
@@ -348,7 +349,7 @@ export class ObjectGenerator extends ProtobufGenerator<Object> { // eslint-disab
         return [
             packageStr,
             HEADER +
-                `package ${packageStr.replace('@', '').replace('/', '.')};\n` +
+                `package ${packageStr.replace(/[@/-]/g, '')};\n` +
                 `syntax = "proto3";\n` +
                 imports
                     .filter((value, idx) => {
