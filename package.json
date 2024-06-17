@@ -1,6 +1,6 @@
 {
   "name": "@openhps/protobuf",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "OpenHPS Protocol Buffer Generator",
   "main": "dist/cjs/bin/generator.js",
   "bin": {
