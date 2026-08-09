@@ -1,12 +1,12 @@
 {
     "compilerOptions": {
+        "esModuleInterop": true,
         "target": "es6",
         "module": "commonjs",
         "moduleResolution": "node",
         "noImplicitAny": false,
         "noEmitHelpers": true,
         "importHelpers": true,
-        "esModuleInterop": true,
         "removeComments": false,
         "preserveConstEnums": true,
         "skipLibCheck": true,
@@ -14,9 +14,6 @@
         "declaration": false,
         "emitDecoratorMetadata": true,
         "experimentalDecorators": true,
-        "lib": [
-            "DOM",
-            "WebWorker"
-        ]
-    },
+        "lib": ["DOM", "WebWorker", "ES2022"]
+    }
 }
