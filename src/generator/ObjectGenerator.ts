@@ -64,6 +64,14 @@ export class ObjectGenerator extends ProtobufGenerator<Object> { // eslint-disab
                     memberOptions,
                     buildOptions,
                 );
+                // An array of a type protobuf cannot express — Set, Object, Function or
+                // a member with a custom serializer — maps to undefined, exactly as the
+                // Map case below already handles. Reading .syntax off it threw
+                // "Cannot read properties of undefined". The caller treats undefined as
+                // "omit this field".
+                if (mappings === undefined) {
+                    return undefined;
+                }
                 return {
                     syntax: `repeated ${mappings.syntax}`,
                     types: [mappings],

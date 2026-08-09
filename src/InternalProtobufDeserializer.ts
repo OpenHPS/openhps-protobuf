@@ -121,7 +121,7 @@ export class InternalProtobufDeserializer extends Deserializer {
     ): IndexedObject | T | undefined {
         let expectedSelfType = typeDescriptor.ctor;
         let sourceObjectMetadata: ObjectMetadata = JsonObjectMetadata.getFromConstructor(expectedSelfType);
-        if (sourceObject.hasOwnProperty('_type') && sourceObject._type !== 0) {
+        if (Object.prototype.hasOwnProperty.call(sourceObject, '_type') && sourceObject._type !== 0) {
             const enumTypeClassname = sourceObjectMetadata.protobuf.enumMapping.get(sourceObject._type);
             if (enumTypeClassname) {
                 const enumType = knownTypes.get(enumTypeClassname);
@@ -162,14 +162,17 @@ export class InternalProtobufDeserializer extends Deserializer {
 
             let revivedValue;
             if (objMemberMetadata.name === 'uid') {
-                if (sourceObject.hasOwnProperty('uid_bytes') && sourceObject['uid_bytes'].byteLength > 0) {
+                if (
+                    Object.prototype.hasOwnProperty.call(sourceObject, 'uid_bytes') &&
+                    sourceObject['uid_bytes'].byteLength > 0
+                ) {
                     revivedValue = UUID.fromBuffer(sourceObject['uid_bytes']).toString();
-                } else if (sourceObject.hasOwnProperty('uid_string')) {
+                } else if (Object.prototype.hasOwnProperty.call(sourceObject, 'uid_string')) {
                     revivedValue = sourceObject['uid_string'];
                 } else {
                     return;
                 }
-            } else if (!sourceObject.hasOwnProperty(memberName) || !objMemberValue) {
+            } else if (!Object.prototype.hasOwnProperty.call(sourceObject, memberName) || !objMemberValue) {
                 return;
             } else if (objMemberMetadata.type() === AnyT && objMemberValue.type_url) {
                 const MessageType = serializerOptions.types.get(sourceObject[memberName].type_url) as protobuf.Type;
