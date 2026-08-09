@@ -4,7 +4,7 @@ import { SocketClient, SocketClientSink, SocketServer, SocketServerSource } from
 import { ProtobufSerializer } from '../../src';
 import * as http from 'http';
 
-describe("Socket Serialization", () => {
+describe('Socket Serialization', () => {
     let clientModel: Model;
     let serverModel: Model;
     let sink: CallbackSinkNode<any>;
@@ -21,35 +21,46 @@ describe("Socket Serialization", () => {
 
         // Create models
         ModelBuilder.create()
-            .addService(new SocketServer({
-                srv: server,
-                path: "/api/v1"
-            }))
-            .from(new SocketServerSource({
-                uid: "source",
-                serialize: (obj) => ProtobufSerializer.serialize(obj),
-                deserialize: (obj) => ProtobufSerializer.deserialize(obj)
-            }))
+            .addService(
+                new SocketServer({
+                    srv: server,
+                    path: '/api/v1',
+                }),
+            )
+            .from(
+                new SocketServerSource({
+                    uid: 'source',
+                    serialize: (obj) => ProtobufSerializer.serialize(obj),
+                    deserialize: (obj) => ProtobufSerializer.deserialize(obj),
+                }),
+            )
             .to(sink)
-            .build().then(model => {
+            .build()
+            .then((model) => {
                 serverModel = model;
 
                 return ModelBuilder.create()
-                    .addService(new SocketClient({
-                        url: "http://localhost:1587",
-                        path: "/api/v1",
-                    }))
+                    .addService(
+                        new SocketClient({
+                            url: 'http://localhost:1587',
+                            path: '/api/v1',
+                        }),
+                    )
                     .from()
-                    .to(new SocketClientSink({
-                        uid: "source",
-                        serialize: (obj) => ProtobufSerializer.serialize(obj),
-                        deserialize: (obj) => ProtobufSerializer.deserialize(obj)
-                    }))
+                    .to(
+                        new SocketClientSink({
+                            uid: 'source',
+                            serialize: (obj) => ProtobufSerializer.serialize(obj),
+                            deserialize: (obj) => ProtobufSerializer.deserialize(obj),
+                        }),
+                    )
                     .build();
-            }).then(model => {
+            })
+            .then((model) => {
                 clientModel = model;
                 done();
-            }).catch(done);
+            })
+            .catch(done);
     });
 
     after(() => {
@@ -61,6 +72,6 @@ describe("Socket Serialization", () => {
     it('should use protocol buffers to send data', (done) => {
         sink.callback = () => done();
         clientModel.once('error', done);
-        clientModel.push(new DataFrame(new DataObject("test")));        
+        clientModel.push(new DataFrame(new DataObject('test')));
     });
 });
