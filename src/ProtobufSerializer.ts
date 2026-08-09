@@ -39,6 +39,18 @@ export class ProtobufSerializer extends DataSerializer {
     static initialize(directory?: string): Promise<void> {
         return new Promise((resolve, reject) => {
             ProtobufSerializer.root = new protobuf.Root();
+            // The generated schemas extend google.protobuf.EnumValueOptions, which is
+            // declared in descriptor.proto. protobufjs resolves imports relative to the
+            // origin file, so it looked for google/protobuf/descriptor.proto inside the
+            // generated output directory and failed with "unresolvable extensions".
+            // protobufjs ships the well-known types itself; point the resolver at them.
+            const defaultResolve = ProtobufSerializer.root.resolvePath.bind(ProtobufSerializer.root);
+            ProtobufSerializer.root.resolvePath = (origin: string, target: string) => {
+                if (target.startsWith('google/protobuf/')) {
+                    return require.resolve(`protobufjs/${target}`);
+                }
+                return defaultResolve(origin, target);
+            };
             Promise.resolve(
                 !directory ? (ProjectGenerator.buildProject(path.resolve('tmp')) as any) : Promise.resolve(),
             )
