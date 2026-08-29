@@ -20,7 +20,7 @@ import {
     RelativeDistance,
 } from '@openhps/core';
 import { ProtobufSerializer } from '../ProtobufSerializer';
-import { expect } from 'chai';
+import assert from 'node:assert/strict';
 
 const args: [K: string] = yargs.argv as any;
 const data = {
@@ -114,13 +114,13 @@ function test(): Promise<void> {
                 frame.addObject(new DataObject('test2', 'Test Object 2'));
                 const buffer = ProtobufSerializer.serialize(frame);
                 const deserialized: DataFrame = ProtobufSerializer.deserialize(buffer);
-                expect(deserialized).to.not.be.undefined;
+                assert.notStrictEqual(deserialized, undefined, 'deserialization returned undefined');
                 const compare1 = JSON.stringify(DataSerializer.serialize(deserialized), null, 2);
                 const compare2 = JSON.stringify(DataSerializer.serialize(frame), null, 2);
                 // console.log(compare1);
                 // console.log('\n');
                 // console.log(compare2);
-                expect(compare1).to.eql(compare2);
+                assert.deepStrictEqual(compare1, compare2, 'round-tripped frame differs from the original');
                 console.log(chalk.green(`Basic serialization and deserialization test completed!`));
                 resolve();
             })

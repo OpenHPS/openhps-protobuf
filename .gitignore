@@ -6,3 +6,8 @@ artifacts/
 test-results.xml
 .nyc_output/
 tmp/
+
+# OpenHPS baseline
+.cache/
+xunit.xml
+.DS_Store

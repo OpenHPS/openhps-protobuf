@@ -1,5 +1,3 @@
 import 'mocha';
 
-describe("Generator", () => {
-
-});
+describe('Generator', () => {});

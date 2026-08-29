@@ -39,6 +39,22 @@ export class ProtobufSerializer extends DataSerializer {
     static initialize(directory?: string): Promise<void> {
         return new Promise((resolve, reject) => {
             ProtobufSerializer.root = new protobuf.Root();
+            // The generated schemas extend google.protobuf.EnumValueOptions, which is
+            // declared in descriptor.proto. protobufjs resolves imports relative to the
+            // origin file, so it looked for google/protobuf/descriptor.proto inside the
+            // generated output directory and failed with "unresolvable extensions".
+            // protobufjs ships the well-known types itself; point the resolver at them.
+            // Resolve the package root from a literal specifier: a template literal here
+            // makes webpack build a context module over the whole protobufjs package,
+            // which then tries to parse its .d.ts and tsconfig.json as bundle input.
+            const protobufRoot = path.dirname(require.resolve('protobufjs/package.json'));
+            const defaultResolve = ProtobufSerializer.root.resolvePath.bind(ProtobufSerializer.root);
+            ProtobufSerializer.root.resolvePath = (origin: string, target: string) => {
+                if (target.startsWith('google/protobuf/')) {
+                    return path.join(protobufRoot, target);
+                }
+                return defaultResolve(origin, target);
+            };
             Promise.resolve(
                 !directory ? (ProjectGenerator.buildProject(path.resolve('tmp')) as any) : Promise.resolve(),
             )
