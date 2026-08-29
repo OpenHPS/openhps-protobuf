@@ -60,7 +60,7 @@
         "prepare": "husky"
     },
     "dependencies": {
-        "@inquirer/prompts": "^5.0.5",
+        "@inquirer/prompts": "^8.6.0",
         "chalk": "^4.1.2",
         "fs-extra": "^11.2.0",
         "long": "^5.2.3",
