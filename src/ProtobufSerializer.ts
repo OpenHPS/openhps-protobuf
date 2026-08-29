@@ -44,10 +44,14 @@ export class ProtobufSerializer extends DataSerializer {
             // origin file, so it looked for google/protobuf/descriptor.proto inside the
             // generated output directory and failed with "unresolvable extensions".
             // protobufjs ships the well-known types itself; point the resolver at them.
+            // Resolve the package root from a literal specifier: a template literal here
+            // makes webpack build a context module over the whole protobufjs package,
+            // which then tries to parse its .d.ts and tsconfig.json as bundle input.
+            const protobufRoot = path.dirname(require.resolve('protobufjs/package.json'));
             const defaultResolve = ProtobufSerializer.root.resolvePath.bind(ProtobufSerializer.root);
             ProtobufSerializer.root.resolvePath = (origin: string, target: string) => {
                 if (target.startsWith('google/protobuf/')) {
-                    return require.resolve(`protobufjs/${target}`);
+                    return path.join(protobufRoot, target);
                 }
                 return defaultResolve(origin, target);
             };
