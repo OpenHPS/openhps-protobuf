@@ -8,6 +8,12 @@ import { InternalProtobufSerializer } from './InternalProtobufSerializer';
 
 export class ProtobufSerializer extends DataSerializer {
     protected static wrapperMessage: protobuf.Type;
+    /**
+     * Root holding {@link wrapperMessage}. protobufjs 8 resolves edition features by
+     * walking up to a root, and throws "Unable to find a parent for WrapperMessage" for
+     * a Type that was never added to one. Held as a field so it stays reachable.
+     */
+    protected static wrapperRoot: protobuf.Root;
     protected static options: ProtobufSerializerConfig = {
         serializer: new InternalProtobufSerializer(),
         deserializer: new InternalProtobufDeserializer(),
@@ -114,9 +120,11 @@ export class ProtobufSerializer extends DataSerializer {
                             });
                     });
 
+                    this.wrapperRoot = new protobuf.Root();
                     this.wrapperMessage = new protobuf.Type('WrapperMessage');
                     this.wrapperMessage.add(new protobuf.Field('data', 1, 'google.protobuf.Any'));
                     this.wrapperMessage.addJSON(protobuf.common['google/protobuf/any.proto'].nested);
+                    this.wrapperRoot.add(this.wrapperMessage);
                     return loadPromise;
                 })
                 .then(() => {

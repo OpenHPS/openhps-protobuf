@@ -34,7 +34,12 @@ describe('Generator', () => {
             // Generated in its own process on purpose -- see test/helpers/build-protos.ts.
             execFileSync(
                 process.execPath,
-                ['-r', path.join(__dirname, '../tsconfig.js'), path.join(__dirname, '../helpers/build-protos.ts'), generated],
+                [
+                    '-r',
+                    path.join(__dirname, '../tsconfig.js'),
+                    path.join(__dirname, '../helpers/build-protos.ts'),
+                    generated,
+                ],
                 { stdio: 'pipe' },
             );
         });
@@ -56,8 +61,8 @@ describe('Generator', () => {
                 const expected = fs.readFileSync(path.join(GOLDEN, file), 'utf-8');
                 if (actual !== expected) differing.push(file);
             }
-            expect(differing, `schemas changed:\n  ${differing.join('\n  ')}\nRegenerate with: npm run build:golden`).to.be
-                .empty;
+            expect(differing, `schemas changed:\n  ${differing.join('\n  ')}\nRegenerate with: npm run build:golden`).to
+                .be.empty;
         });
     });
 });

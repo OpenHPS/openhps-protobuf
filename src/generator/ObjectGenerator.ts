@@ -18,12 +18,15 @@ import { ProjectBuildOptions } from './types';
 /**
  * Protobuf object generator
  */
-export class ObjectGenerator extends ProtobufGenerator<Object> { // eslint-disable-line
-    processObject(object: Constructor<Object>, metaData: ObjectMemberMetadata): Promise<void> { // eslint-disable-line
+export class ObjectGenerator extends ProtobufGenerator<Object> {
+    // eslint-disable-line
+    processObject(object: Constructor<Object>, metaData: ObjectMemberMetadata): Promise<void> {
+        // eslint-disable-line
         throw new Error('Method not implemented.');
     }
 
-    generate(object: Constructor<Object>, metaData: ObjectMemberMetadata): Promise<ProtobufMessage> { // eslint-disable-line
+    generate(object: Constructor<Object>, metaData: ObjectMemberMetadata): Promise<ProtobufMessage> {
+        // eslint-disable-line
         throw new Error('Method not implemented.');
     }
 
@@ -141,12 +144,17 @@ export class ObjectGenerator extends ProtobufGenerator<Object> { // eslint-disab
     }
 
     static processObject(object: ObjectMetadata, buildOptions: ProjectBuildOptions): void {
-        object.protobuf = object.protobuf ?? {
-            generator: {
-                subModules: new Set(),
-                subTypes: [],
-                allowOverride: true,
-            },
+        // object.protobuf is a slot shared with the runtime serializer, which fills it in
+        // as {messageType, messageTypeEnum, enumMapping} with no `generator` key. Guarding
+        // the whole object with `??` kept that value and then dereferenced a `generator`
+        // that was not there, so ProtobufSerializer.initialize() threw if anything had
+        // already initialised the serializer in the same process. Guard the two levels
+        // separately.
+        object.protobuf = object.protobuf ?? ({} as any);
+        object.protobuf.generator = object.protobuf.generator ?? {
+            subModules: new Set(),
+            subTypes: [],
+            allowOverride: true,
         };
 
         const dataMembers = object.dataMembers;
@@ -198,7 +206,8 @@ export class ObjectGenerator extends ProtobufGenerator<Object> { // eslint-disab
                 object.protobuf.generator.type = object.protobuf.generator.type ?? object.classType;
                 subTypes.forEach((type) => {
                     const subTypeMeta = DataSerializerUtils.getOwnMetadata(type);
-                    subTypeMeta.protobuf = subTypeMeta.protobuf ?? { generator: {} };
+                    subTypeMeta.protobuf = subTypeMeta.protobuf ?? ({} as any);
+                    subTypeMeta.protobuf.generator = subTypeMeta.protobuf.generator ?? {};
                     subTypeMeta.protobuf.generator.type = object.classType;
                 });
             }
