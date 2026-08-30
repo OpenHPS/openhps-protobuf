@@ -1,0 +1,32 @@
+/**
+ * OpenHPS Protocol Buffer 
+ *  This file was automatically generated with @openhps/protobuf
+ * 
+ * (c) 2019-2024 Maxim Van de Wynckel & Vrije Universiteit Brussel
+ **/
+
+package openhpscore;
+syntax = "proto3";
+import "../../common.proto";
+import "Accuracy.proto";
+import "Vector3.proto";
+import "Unit.proto";
+
+enum Accuracy2DType {
+	UNSPECIFIED = 0;
+	ACCURACY_2D = 3 [
+		(className) = "Accuracy2D",
+		(packageName) = "@openhps/core"
+	];
+	ACCURACY_3D = 4 [
+		(className) = "Accuracy3D",
+		(packageName) = "@openhps/core"
+	];
+}
+
+message Accuracy2D {
+	AccuracyType _type = 0;
+	Vector3 value_vector3 = 1;
+	Unit unit = 2;
+	Unit _unit = 3;
+}

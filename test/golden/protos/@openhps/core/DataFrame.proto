@@ -1,0 +1,36 @@
+/**
+ * OpenHPS Protocol Buffer 
+ *  This file was automatically generated with @openhps/protobuf
+ * 
+ * (c) 2019-2024 Maxim Van de Wynckel & Vrije Universiteit Brussel
+ **/
+
+package openhpscore;
+syntax = "proto3";
+import "../../common.proto";
+import "DataObject.proto";
+
+enum DataFrameType {
+	UNSPECIFIED = 0;
+	DATA_FRAME = 1 [
+		(className) = "DataFrame",
+		(packageName) = "@openhps/core"
+	];
+	RF_DATA_FRAME = 2 [
+		(className) = "RFDataFrame",
+		(packageName) = "@openhps/rf"
+	];
+}
+
+message DataFrame {
+	DataFrameType _type = 0;
+	oneof uid {
+		string uid_string = 1;
+		bytes uid_bytes = 2;
+	}
+	int64 createdTimestamp = 3;
+	int64 phenomenonTimestamp = 4;
+	string source = 5;
+	map<string,DataObject> objects = 6;
+	string _source = 7;
+}

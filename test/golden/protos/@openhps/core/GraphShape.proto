@@ -1,0 +1,25 @@
+/**
+ * OpenHPS Protocol Buffer 
+ *  This file was automatically generated with @openhps/protobuf
+ * 
+ * (c) 2019-2024 Maxim Van de Wynckel & Vrije Universiteit Brussel
+ **/
+
+package openhpscore;
+syntax = "proto3";
+import "GraphNode.proto";
+import "google/protobuf/any.proto";
+
+message GraphShape {
+	GraphNodeType _type = 0;
+	string name = 1;
+	oneof uid {
+		string uid_string = 2;
+		bytes uid_bytes = 3;
+	}
+	google.protobuf.Any options = 4;
+	map<string,GraphNode> nodes = 5;
+	map<string,google.protobuf.Any> edges = 6;
+	GraphNode internalSource = 7;
+	GraphNode internalSink = 8;
+}

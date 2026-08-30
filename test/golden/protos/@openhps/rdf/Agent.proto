@@ -1,0 +1,16 @@
+/**
+ * OpenHPS Protocol Buffer 
+ *  This file was automatically generated with @openhps/protobuf
+ * 
+ * (c) 2019-2024 Maxim Van de Wynckel & Vrije Universiteit Brussel
+ **/
+
+package openhpsrdf;
+syntax = "proto3";
+import "SerializableNamedNode.proto";
+import "User.proto";
+
+message Agent {
+	SerializableNamedNodeType _type = 0;
+	User user = 1;
+}

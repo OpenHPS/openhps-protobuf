@@ -1,0 +1,21 @@
+/**
+ * OpenHPS Protocol Buffer 
+ *  This file was automatically generated with @openhps/protobuf
+ * 
+ * (c) 2019-2024 Maxim Van de Wynckel & Vrije Universiteit Brussel
+ **/
+
+package openhpscore;
+syntax = "proto3";
+import "Service.proto";
+import "TimeUnit.proto";
+
+message TimeService {
+	ServiceType _type = 0;
+	oneof uid {
+		string uid_string = 1;
+		bytes uid_bytes = 2;
+	}
+	TimeUnit _timeUnit = 3;
+	bool isDefault = 4;
+}

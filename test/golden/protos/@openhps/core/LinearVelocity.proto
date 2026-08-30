@@ -1,0 +1,22 @@
+/**
+ * OpenHPS Protocol Buffer 
+ *  This file was automatically generated with @openhps/protobuf
+ * 
+ * (c) 2019-2024 Maxim Van de Wynckel & Vrije Universiteit Brussel
+ **/
+
+package openhpscore;
+syntax = "proto3";
+import "Vector3.proto";
+import "Accuracy.proto";
+import "LinearVelocityUnit.proto";
+
+message LinearVelocity {
+	Vector3Type _type = 0;
+	double x = 1;
+	double y = 2;
+	double z = 3;
+	int64 timestamp = 4;
+	Accuracy accuracy = 5;
+	LinearVelocityUnit unit = 6;
+}

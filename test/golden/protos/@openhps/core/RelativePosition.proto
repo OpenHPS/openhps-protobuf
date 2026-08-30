@@ -1,0 +1,82 @@
+/**
+ * OpenHPS Protocol Buffer 
+ *  This file was automatically generated with @openhps/protobuf
+ * 
+ * (c) 2019-2024 Maxim Van de Wynckel & Vrije Universiteit Brussel
+ **/
+
+package openhpscore;
+syntax = "proto3";
+import "../../common.proto";
+import "AngularVelocity.proto";
+import "LinearVelocity.proto";
+import "google/protobuf/any.proto";
+import "Accuracy.proto";
+import "AngleUnit.proto";
+import "LengthUnit.proto";
+import "Orientation.proto";
+
+enum RelativePositionType {
+	UNSPECIFIED = 0;
+	RELATIVE_POSITION = 1 [
+		(className) = "RelativePosition",
+		(packageName) = "@openhps/core"
+	];
+	RELATIVE_2D_POSITION = 2 [
+		(className) = "Relative2DPosition",
+		(packageName) = "@openhps/core"
+	];
+	RELATIVE_3D_POSITION = 3 [
+		(className) = "Relative3DPosition",
+		(packageName) = "@openhps/core"
+	];
+	RELATIVE_ORIENTATION = 4 [
+		(className) = "RelativeOrientation",
+		(packageName) = "@openhps/core"
+	];
+	RELATIVE_ANGLE = 5 [
+		(className) = "RelativeAngle",
+		(packageName) = "@openhps/core"
+	];
+	RELATIVE_DISTANCE = 6 [
+		(className) = "RelativeDistance",
+		(packageName) = "@openhps/core"
+	];
+	RELATIVE_ANGULAR_VELOCITY = 7 [
+		(className) = "RelativeAngularVelocity",
+		(packageName) = "@openhps/core"
+	];
+	RELATIVE_LINEAR_VELOCITY = 8 [
+		(className) = "RelativeLinearVelocity",
+		(packageName) = "@openhps/core"
+	];
+	RELATIVERSSI = 9 [
+		(className) = "RelativeRSSI",
+		(packageName) = "@openhps/rf"
+	];
+}
+
+message RelativePosition {
+	RelativePositionType _type = 0;
+	int64 timestamp = 1;
+	string referenceObjectUID = 2;
+	string referenceObjectType = 3;
+	oneof referenceValue {
+		double referenceValue_number = 4;
+		AngularVelocity referenceValue_angularvelocity = 5;
+		LinearVelocity referenceValue_linearvelocity = 6;
+		google.protobuf.Any referenceValue_any = 7;
+	}
+	Accuracy accuracy = 8;
+	double probability = 9;
+	oneof unit {
+		AngleUnit unit_angleunit = 10;
+		LengthUnit unit_lengthunit = 11;
+		google.protobuf.Any unit_any = 12;
+	}
+	optional double x = 13;
+	optional double y = 14;
+	optional double z = 15;
+	optional Orientation orientation = 16;
+	optional string rssi = 17;
+}

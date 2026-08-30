@@ -1,0 +1,28 @@
+/**
+ * OpenHPS Protocol Buffer 
+ *  This file was automatically generated with @openhps/protobuf
+ * 
+ * (c) 2019-2024 Maxim Van de Wynckel & Vrije Universiteit Brussel
+ **/
+
+package openhpscore;
+syntax = "proto3";
+import "AbsolutePosition.proto";
+import "Velocity.proto";
+import "Orientation.proto";
+import "LengthUnit.proto";
+import "Accuracy.proto";
+
+message GeographicalPosition {
+	AbsolutePositionType _type = 0;
+	int64 timestamp = 1;
+	Velocity velocity = 2;
+	Orientation orientation = 3;
+	LengthUnit unit = 4;
+	string referenceSpaceUID = 5;
+	Accuracy accuracy = 6;
+	double probability = 7;
+	double x = 8;
+	double y = 9;
+	double z = 10;
+}

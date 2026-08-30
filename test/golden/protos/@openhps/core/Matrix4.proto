@@ -1,0 +1,33 @@
+/**
+ * OpenHPS Protocol Buffer 
+ *  This file was automatically generated with @openhps/protobuf
+ * 
+ * (c) 2019-2024 Maxim Van de Wynckel & Vrije Universiteit Brussel
+ **/
+
+package openhpscore;
+syntax = "proto3";
+import "../../common.proto";
+import "LengthUnit.proto";
+import "Accuracy.proto";
+
+enum Matrix4Type {
+	UNSPECIFIED = 0;
+	MATRIX4 = 1 [
+		(className) = "Matrix4",
+		(packageName) = "@openhps/core"
+	];
+	POSE = 2 [
+		(className) = "Pose",
+		(packageName) = "@openhps/core"
+	];
+}
+
+message Matrix4 {
+	Matrix4Type _type = 0;
+	repeated double elements = 1;
+	optional int64 timestamp = 2;
+	optional LengthUnit unit = 3;
+	optional Accuracy accuracy = 4;
+	optional double probability = 5;
+}

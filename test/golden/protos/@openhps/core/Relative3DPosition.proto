@@ -1,0 +1,26 @@
+/**
+ * OpenHPS Protocol Buffer 
+ *  This file was automatically generated with @openhps/protobuf
+ * 
+ * (c) 2019-2024 Maxim Van de Wynckel & Vrije Universiteit Brussel
+ **/
+
+package openhpscore;
+syntax = "proto3";
+import "RelativePosition.proto";
+import "google/protobuf/any.proto";
+import "Accuracy.proto";
+
+message Relative3DPosition {
+	RelativePositionType _type = 0;
+	int64 timestamp = 1;
+	string referenceObjectUID = 2;
+	string referenceObjectType = 3;
+	google.protobuf.Any referenceValue_ = 4;
+	Accuracy accuracy = 5;
+	double probability = 6;
+	google.protobuf.Any unit_ = 7;
+	double x = 8;
+	double y = 9;
+	double z = 10;
+}

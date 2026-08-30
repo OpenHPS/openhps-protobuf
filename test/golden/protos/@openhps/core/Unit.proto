@@ -1,0 +1,79 @@
+/**
+ * OpenHPS Protocol Buffer 
+ *  This file was automatically generated with @openhps/protobuf
+ * 
+ * (c) 2019-2024 Maxim Van de Wynckel & Vrije Universiteit Brussel
+ **/
+
+package openhpscore;
+syntax = "proto3";
+import "../../common.proto";
+
+enum UnitType {
+	UNSPECIFIED = 0;
+	UNIT = 1 [
+		(className) = "Unit",
+		(packageName) = "@openhps/core"
+	];
+	DERIVED_UNIT = 2 [
+		(className) = "DerivedUnit",
+		(packageName) = "@openhps/core"
+	];
+	ANGLE_UNIT = 3 [
+		(className) = "AngleUnit",
+		(packageName) = "@openhps/core"
+	];
+	TIME_UNIT = 4 [
+		(className) = "TimeUnit",
+		(packageName) = "@openhps/core"
+	];
+	ANGULAR_VELOCITY_UNIT = 5 [
+		(className) = "AngularVelocityUnit",
+		(packageName) = "@openhps/core"
+	];
+	LENGTH_UNIT = 6 [
+		(className) = "LengthUnit",
+		(packageName) = "@openhps/core"
+	];
+	LINEAR_VELOCITY_UNIT = 7 [
+		(className) = "LinearVelocityUnit",
+		(packageName) = "@openhps/core"
+	];
+	ACCELERATION_UNIT = 8 [
+		(className) = "AccelerationUnit",
+		(packageName) = "@openhps/core"
+	];
+	MAGNETISM_UNIT = 9 [
+		(className) = "MagnetismUnit",
+		(packageName) = "@openhps/core"
+	];
+	GCS = 10 [
+		(className) = "GCS",
+		(packageName) = "@openhps/core"
+	];
+	TEMPERATURE_UNIT = 11 [
+		(className) = "TemperatureUnit",
+		(packageName) = "@openhps/core"
+	];
+	LUMINANCE_INTENSITY_UNIT = 12 [
+		(className) = "LuminanceIntensityUnit",
+		(packageName) = "@openhps/core"
+	];
+	LUMINANCE_UNIT = 13 [
+		(className) = "LuminanceUnit",
+		(packageName) = "@openhps/core"
+	];
+	PRESSURE_UNIT = 14 [
+		(className) = "PressureUnit",
+		(packageName) = "@openhps/core"
+	];
+	POWER_UNIT = 15 [
+		(className) = "PowerUnit",
+		(packageName) = "@openhps/rf"
+	];
+}
+
+message Unit {
+	UnitType _type = 0;
+	string name = 1;
+}

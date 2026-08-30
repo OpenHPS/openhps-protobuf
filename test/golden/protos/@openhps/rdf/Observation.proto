@@ -1,0 +1,23 @@
+/**
+ * OpenHPS Protocol Buffer 
+ *  This file was automatically generated with @openhps/protobuf
+ * 
+ * (c) 2019-2024 Maxim Van de Wynckel & Vrije Universiteit Brussel
+ **/
+
+package openhpsrdf;
+syntax = "proto3";
+import "SerializableThing.proto";
+import "FeatureOfInterest.proto";
+import "ObservableProperty.proto";
+
+message Observation {
+	SerializableThingType _type = 0;
+	string id = 1;
+	string label = 2;
+	string description = 3;
+	string resultTime = 4;
+	repeated FeatureOfInterest featuresOfInterest = 5;
+	repeated ObservableProperty observedProperties = 6;
+	repeated string usedProcedures = 7;
+}

@@ -1,0 +1,48 @@
+/**
+ * OpenHPS Protocol Buffer 
+ *  This file was automatically generated with @openhps/protobuf
+ * 
+ * (c) 2019-2024 Maxim Van de Wynckel & Vrije Universiteit Brussel
+ **/
+
+package openhpscore;
+syntax = "proto3";
+import "../../common.proto";
+import "Velocity.proto";
+import "Orientation.proto";
+import "LengthUnit.proto";
+import "Accuracy.proto";
+
+enum AbsolutePositionType {
+	UNSPECIFIED = 0;
+	ABSOLUTE_POSITION = 1 [
+		(className) = "AbsolutePosition",
+		(packageName) = "@openhps/core"
+	];
+	ABSOLUTE_2D_POSITION = 2 [
+		(className) = "Absolute2DPosition",
+		(packageName) = "@openhps/core"
+	];
+	ABSOLUTE_3D_POSITION = 3 [
+		(className) = "Absolute3DPosition",
+		(packageName) = "@openhps/core"
+	];
+	GEOGRAPHICAL_POSITION = 4 [
+		(className) = "GeographicalPosition",
+		(packageName) = "@openhps/core"
+	];
+}
+
+message AbsolutePosition {
+	AbsolutePositionType _type = 0;
+	int64 timestamp = 1;
+	Velocity velocity = 2;
+	Orientation orientation = 3;
+	LengthUnit unit = 4;
+	string referenceSpaceUID = 5;
+	Accuracy accuracy = 6;
+	double probability = 7;
+	optional double x = 8;
+	optional double y = 9;
+	optional double z = 10;
+}

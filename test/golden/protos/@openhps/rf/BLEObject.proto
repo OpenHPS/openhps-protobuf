@@ -1,0 +1,71 @@
+/**
+ * OpenHPS Protocol Buffer 
+ *  This file was automatically generated with @openhps/protobuf
+ * 
+ * (c) 2019-2024 Maxim Van de Wynckel & Vrije Universiteit Brussel
+ **/
+
+package openhpsrf;
+syntax = "proto3";
+import "../../common.proto";
+import "../../@openhps/core/DataObject.proto";
+import "../../@openhps/core/AbsolutePosition.proto";
+import "../../@openhps/core/RelativePosition.proto";
+import "MACAddress.proto";
+import "BLEService.proto";
+import "../../@openhps/core/Matrix4.proto";
+import "../../@openhps/core/Quaternion.proto";
+import "../../@openhps/core/LengthUnit.proto";
+import "google/protobuf/any.proto";
+import "../../@openhps/core/SensorCalibrationData.proto";
+import "../../@openhps/core/ActuatorProperty.proto";
+import "../../@openhps/rdf/ActuableProperty.proto";
+import "../../@openhps/rdf/ObservableProperty.proto";
+
+enum BLEObjectType {
+	UNSPECIFIED = 0;
+	BLE_OBJECT = 18 [
+		(className) = "BLEObject",
+		(packageName) = "@openhps/rf"
+	];
+	BLE_BEACON_OBJECT = 19 [
+		(className) = "BLEBeaconObject",
+		(packageName) = "@openhps/rf"
+	];
+}
+
+message BLEObject {
+	DataObjectType _type = 0;
+	string displayName = 1;
+	int64 createdTimestamp = 2;
+	oneof uid {
+		string uid_string = 3;
+		bytes uid_bytes = 4;
+	}
+	string parentUID = 5;
+	AbsolutePosition position = 6;
+	repeated RelativePosition relativePositions = 7;
+	string txPower = 8;
+	string frequency = 9;
+	string calibratedRSSI = 10;
+	string environmentFactor = 11;
+	bytes rawAdvertisement = 12;
+	map<string,bytes> manufacturerData = 13;
+	MACAddress address = 14;
+	repeated MACAddress knownAddresses = 15;
+	string mtu = 16;
+	string appearance = 17;
+	map<string,BLEService> services = 18;
+	optional Matrix4 translationMatrix = 19;
+	optional Matrix4 transformationMatrix = 20;
+	optional Matrix4 scaleMatrix = 21;
+	optional Quaternion rotation = 22;
+	optional LengthUnit unit = 23;
+	optional google.protobuf.Any value = 24;
+	optional SensorCalibrationData calibrationData = 25;
+	map<string,ActuatorProperty> properties = 26;
+	repeated ActuableProperty actuableProperties = 27;
+	repeated ObservableProperty observableProperties = 28;
+	optional string description = 29;
+	optional string rxSensitivity = 30;
+}

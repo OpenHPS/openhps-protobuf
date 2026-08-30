@@ -1,0 +1,14 @@
+/**
+ * OpenHPS Protocol Buffer 
+ *  This file was automatically generated with @openhps/protobuf
+ * 
+ * (c) 2019-2024 Maxim Van de Wynckel & Vrije Universiteit Brussel
+ **/
+
+syntax = "proto3";
+import "google/protobuf/descriptor.proto";
+
+extend google.protobuf.EnumValueOptions {
+	optional string className = 50001;
+	optional string packageName = 50002;
+}

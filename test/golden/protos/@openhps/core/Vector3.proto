@@ -1,0 +1,67 @@
+/**
+ * OpenHPS Protocol Buffer 
+ *  This file was automatically generated with @openhps/protobuf
+ * 
+ * (c) 2019-2024 Maxim Van de Wynckel & Vrije Universiteit Brussel
+ **/
+
+package openhpscore;
+syntax = "proto3";
+import "../../common.proto";
+import "Accuracy.proto";
+import "google/protobuf/any.proto";
+
+enum Vector3Type {
+	UNSPECIFIED = 0;
+	VECTOR3 = 1 [
+		(className) = "Vector3",
+		(packageName) = "@openhps/core"
+	];
+	AXIS_ANGLE = 2 [
+		(className) = "AxisAngle",
+		(packageName) = "@openhps/core"
+	];
+	SENSOR_VALUE = 3 [
+		(className) = "SensorValue",
+		(packageName) = "@openhps/core"
+	];
+	ANGULAR_VELOCITY = 4 [
+		(className) = "AngularVelocity",
+		(packageName) = "@openhps/core"
+	];
+	LINEAR_VELOCITY = 5 [
+		(className) = "LinearVelocity",
+		(packageName) = "@openhps/core"
+	];
+	ACCELERATION = 6 [
+		(className) = "Acceleration",
+		(packageName) = "@openhps/core"
+	];
+	MAGNETISM = 7 [
+		(className) = "Magnetism",
+		(packageName) = "@openhps/core"
+	];
+	TEMPERATURE = 8 [
+		(className) = "Temperature",
+		(packageName) = "@openhps/core"
+	];
+	HUMIDITY = 9 [
+		(className) = "Humidity",
+		(packageName) = "@openhps/core"
+	];
+	PRESSURE = 10 [
+		(className) = "Pressure",
+		(packageName) = "@openhps/core"
+	];
+}
+
+message Vector3 {
+	Vector3Type _type = 0;
+	double x = 1;
+	double y = 2;
+	double z = 3;
+	optional double angle = 4;
+	optional int64 timestamp = 5;
+	optional Accuracy accuracy = 6;
+	optional google.protobuf.Any unit = 7;
+}

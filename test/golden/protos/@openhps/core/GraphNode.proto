@@ -1,0 +1,64 @@
+/**
+ * OpenHPS Protocol Buffer 
+ *  This file was automatically generated with @openhps/protobuf
+ * 
+ * (c) 2019-2024 Maxim Van de Wynckel & Vrije Universiteit Brussel
+ **/
+
+package openhpscore;
+syntax = "proto3";
+import "../../common.proto";
+import "google/protobuf/any.proto";
+import "GraphNode.proto";
+import "Service.proto";
+import "DataService.proto";
+import "ReferenceSpace.proto";
+
+enum GraphNodeType {
+	UNSPECIFIED = 0;
+	GRAPH_NODE = 1 [
+		(className) = "GraphNode",
+		(packageName) = "@openhps/core"
+	];
+	NODE = 2 [
+		(className) = "Node",
+		(packageName) = "@openhps/core"
+	];
+	SINK_NODE = 3 [
+		(className) = "SinkNode",
+		(packageName) = "@openhps/core"
+	];
+	SOURCE_NODE = 4 [
+		(className) = "SourceNode",
+		(packageName) = "@openhps/core"
+	];
+	PROCESSING_NODE = 5 [
+		(className) = "ProcessingNode",
+		(packageName) = "@openhps/core"
+	];
+	GRAPH_SHAPE = 6 [
+		(className) = "GraphShape",
+		(packageName) = "@openhps/core"
+	];
+	MODEL_GRAPH = 7 [
+		(className) = "ModelGraph",
+		(packageName) = "@openhps/core"
+	];
+}
+
+message GraphNode {
+	GraphNodeType _type = 0;
+	string name = 1;
+	oneof uid {
+		string uid_string = 2;
+		bytes uid_bytes = 3;
+	}
+	optional google.protobuf.Any options = 4;
+	map<string,GraphNode> nodes = 5;
+	map<string,google.protobuf.Any> edges = 6;
+	optional GraphNode internalSource = 7;
+	optional GraphNode internalSink = 8;
+	map<string,Service> services = 9;
+	map<string,DataService> dataServices = 10;
+	optional ReferenceSpace referenceSpace = 11;
+}

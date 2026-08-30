@@ -1,0 +1,38 @@
+/**
+ * OpenHPS Protocol Buffer 
+ *  This file was automatically generated with @openhps/protobuf
+ * 
+ * (c) 2019-2024 Maxim Van de Wynckel & Vrije Universiteit Brussel
+ **/
+
+package openhpscore;
+syntax = "proto3";
+import "../../common.proto";
+import "GraphNode.proto";
+import "google/protobuf/any.proto";
+
+enum NodeType {
+	UNSPECIFIED = 0;
+	NODE = 2 [
+		(className) = "Node",
+		(packageName) = "@openhps/core"
+	];
+	SINK_NODE = 3 [
+		(className) = "SinkNode",
+		(packageName) = "@openhps/core"
+	];
+	PROCESSING_NODE = 5 [
+		(className) = "ProcessingNode",
+		(packageName) = "@openhps/core"
+	];
+}
+
+message Node {
+	GraphNodeType _type = 0;
+	string name = 1;
+	oneof uid {
+		string uid_string = 2;
+		bytes uid_bytes = 3;
+	}
+	google.protobuf.Any options = 4;
+}

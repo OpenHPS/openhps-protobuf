@@ -1,0 +1,37 @@
+/**
+ * OpenHPS Protocol Buffer 
+ *  This file was automatically generated with @openhps/protobuf
+ * 
+ * (c) 2019-2024 Maxim Van de Wynckel & Vrije Universiteit Brussel
+ **/
+
+package openhpsrdf;
+syntax = "proto3";
+import "../../common.proto";
+import "QuantityValue.proto";
+
+enum GeometryType {
+	UNSPECIFIED = 0;
+	GEOMETRY = 1 [
+		(className) = "Geometry",
+		(packageName) = "@openhps/rdf"
+	];
+	MULTI_POLYGON_GEOMETRY = 2 [
+		(className) = "MultiPolygonGeometry",
+		(packageName) = "@openhps/rdf"
+	];
+	POLYGON_GEOMETRY = 3 [
+		(className) = "PolygonGeometry",
+		(packageName) = "@openhps/rdf"
+	];
+	POINT_GEOMETRY = 4 [
+		(className) = "PointGeometry",
+		(packageName) = "@openhps/rdf"
+	];
+}
+
+message Geometry {
+	GeometryType _type = 0;
+	QuantityValue spatialAccuracy = 1;
+	optional string inDeployment = 2;
+}

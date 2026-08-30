@@ -57,7 +57,8 @@
         "bump:development": "commit-and-tag-version --prerelease alpha -m 'chore(alpha): %s' --skip.changelog",
         "bump:beta": "commit-and-tag-version --prerelease beta -m 'chore(beta): %s' --skip.changelog",
         "bump:release": "commit-and-tag-version -m 'chore(release): %s' --skip.changelog",
-        "prepare": "husky"
+        "prepare": "husky",
+        "build:golden": "shx rm -rf test/golden/protos && node -r ./test/tsconfig.js test/helpers/build-protos.ts test/golden/protos"
     },
     "dependencies": {
         "@inquirer/prompts": "^5.0.5",

@@ -1,0 +1,17 @@
+/**
+ * OpenHPS Protocol Buffer 
+ *  This file was automatically generated with @openhps/protobuf
+ * 
+ * (c) 2019-2024 Maxim Van de Wynckel & Vrije Universiteit Brussel
+ **/
+
+package openhpscore;
+syntax = "proto3";
+import "Unit.proto";
+import "google/protobuf/any.proto";
+
+message SensorCalibrationData {
+	Unit unit = 1;
+	google.protobuf.Any offset = 2;
+	google.protobuf.Any multiplier = 3;
+}

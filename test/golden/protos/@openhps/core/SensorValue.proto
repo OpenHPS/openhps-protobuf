@@ -1,0 +1,48 @@
+/**
+ * OpenHPS Protocol Buffer 
+ *  This file was automatically generated with @openhps/protobuf
+ * 
+ * (c) 2019-2024 Maxim Van de Wynckel & Vrije Universiteit Brussel
+ **/
+
+package openhpscore;
+syntax = "proto3";
+import "../../common.proto";
+import "Vector3.proto";
+import "Accuracy.proto";
+import "google/protobuf/any.proto";
+
+enum SensorValueType {
+	UNSPECIFIED = 0;
+	SENSOR_VALUE = 3 [
+		(className) = "SensorValue",
+		(packageName) = "@openhps/core"
+	];
+	ACCELERATION = 6 [
+		(className) = "Acceleration",
+		(packageName) = "@openhps/core"
+	];
+	TEMPERATURE = 8 [
+		(className) = "Temperature",
+		(packageName) = "@openhps/core"
+	];
+	HUMIDITY = 9 [
+		(className) = "Humidity",
+		(packageName) = "@openhps/core"
+	];
+	PRESSURE = 10 [
+		(className) = "Pressure",
+		(packageName) = "@openhps/core"
+	];
+}
+
+message SensorValue {
+	Vector3Type _type = 0;
+	double x = 1;
+	double y = 2;
+	double z = 3;
+	int64 timestamp = 4;
+	Accuracy accuracy = 5;
+	google.protobuf.Any unit = 6;
+	optional double angle = 7;
+}

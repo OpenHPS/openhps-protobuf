@@ -1,0 +1,83 @@
+/**
+ * OpenHPS Protocol Buffer 
+ *  This file was automatically generated with @openhps/protobuf
+ * 
+ * (c) 2019-2024 Maxim Van de Wynckel & Vrije Universiteit Brussel
+ **/
+
+package openhpscore;
+syntax = "proto3";
+import "../../common.proto";
+import "DataObject.proto";
+import "AbsolutePosition.proto";
+import "RelativePosition.proto";
+import "google/protobuf/any.proto";
+import "SensorCalibrationData.proto";
+import "Matrix4.proto";
+import "Quaternion.proto";
+import "LengthUnit.proto";
+
+enum SensorObjectType {
+	UNSPECIFIED = 0;
+	SENSOR_OBJECT = 3 [
+		(className) = "SensorObject",
+		(packageName) = "@openhps/core"
+	];
+	ACCELEROMETER = 4 [
+		(className) = "Accelerometer",
+		(packageName) = "@openhps/core"
+	];
+	GRAVITY_SENSOR = 5 [
+		(className) = "GravitySensor",
+		(packageName) = "@openhps/core"
+	];
+	GYROSCOPE = 6 [
+		(className) = "Gyroscope",
+		(packageName) = "@openhps/core"
+	];
+	LINEAR_ACCELERATION_SENSOR = 7 [
+		(className) = "LinearAccelerationSensor",
+		(packageName) = "@openhps/core"
+	];
+	ABSOLUTE_ORIENTATION_SENSOR = 8 [
+		(className) = "AbsoluteOrientationSensor",
+		(packageName) = "@openhps/core"
+	];
+	RELATIVE_ORIENTATION_SENSOR = 9 [
+		(className) = "RelativeOrientationSensor",
+		(packageName) = "@openhps/core"
+	];
+	MAGNETOMETER = 10 [
+		(className) = "Magnetometer",
+		(packageName) = "@openhps/core"
+	];
+	LINEAR_VELOCITY_SENSOR = 11 [
+		(className) = "LinearVelocitySensor",
+		(packageName) = "@openhps/core"
+	];
+	UNKNOWN_SENSOR = 13 [
+		(className) = "UnknownSensor",
+		(packageName) = "@openhps/core"
+	];
+}
+
+message SensorObject {
+	DataObjectType _type = 0;
+	string displayName = 1;
+	int64 createdTimestamp = 2;
+	oneof uid {
+		string uid_string = 3;
+		bytes uid_bytes = 4;
+	}
+	string parentUID = 5;
+	AbsolutePosition position = 6;
+	repeated RelativePosition relativePositions = 7;
+	google.protobuf.Any value = 8;
+	double frequency = 9;
+	SensorCalibrationData calibrationData = 10;
+	optional Matrix4 translationMatrix = 11;
+	optional Matrix4 transformationMatrix = 12;
+	optional Matrix4 scaleMatrix = 13;
+	optional Quaternion rotation = 14;
+	optional LengthUnit unit = 15;
+}

@@ -1,0 +1,42 @@
+/**
+ * OpenHPS Protocol Buffer 
+ *  This file was automatically generated with @openhps/protobuf
+ * 
+ * (c) 2019-2024 Maxim Van de Wynckel & Vrije Universiteit Brussel
+ **/
+
+package openhpsrdf;
+syntax = "proto3";
+import "../../common.proto";
+import "User.proto";
+import "Platform.proto";
+import "PolygonGeometry.proto";
+import "Address.proto";
+import "Deployment.proto";
+
+enum SerializableNamedNodeType {
+	UNSPECIFIED = 0;
+	SERIALIZABLE_NAMED_NODE = 1 [
+		(className) = "SerializableNamedNode",
+		(packageName) = "@openhps/rdf"
+	];
+	AGENT = 2 [
+		(className) = "Agent",
+		(packageName) = "@openhps/rdf"
+	];
+	DEPLOYMENT = 3 [
+		(className) = "Deployment",
+		(packageName) = "@openhps/rdf"
+	];
+}
+
+message SerializableNamedNode {
+	SerializableNamedNodeType _type = 0;
+	optional User user = 1;
+	optional string label = 2;
+	optional string comment = 3;
+	optional Platform platform = 4;
+	optional PolygonGeometry geometry = 5;
+	optional Address address = 6;
+	optional Deployment within = 7;
+}

@@ -1,0 +1,33 @@
+/**
+ * OpenHPS Protocol Buffer 
+ *  This file was automatically generated with @openhps/protobuf
+ * 
+ * (c) 2019-2024 Maxim Van de Wynckel & Vrije Universiteit Brussel
+ **/
+
+package openhpscore;
+syntax = "proto3";
+import "DataObject.proto";
+import "AbsolutePosition.proto";
+import "RelativePosition.proto";
+import "Matrix4.proto";
+import "Quaternion.proto";
+import "LengthUnit.proto";
+
+message ReferenceSpace {
+	DataObjectType _type = 0;
+	string displayName = 1;
+	int64 createdTimestamp = 2;
+	oneof uid {
+		string uid_string = 3;
+		bytes uid_bytes = 4;
+	}
+	string parentUID = 5;
+	AbsolutePosition position = 6;
+	repeated RelativePosition relativePositions = 7;
+	Matrix4 translationMatrix = 8;
+	Matrix4 transformationMatrix = 9;
+	Matrix4 scaleMatrix = 10;
+	Quaternion rotation = 11;
+	LengthUnit unit = 12;
+}

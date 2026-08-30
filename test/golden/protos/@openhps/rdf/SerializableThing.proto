@@ -1,0 +1,97 @@
+/**
+ * OpenHPS Protocol Buffer 
+ *  This file was automatically generated with @openhps/protobuf
+ * 
+ * (c) 2019-2024 Maxim Van de Wynckel & Vrije Universiteit Brussel
+ **/
+
+package openhpsrdf;
+syntax = "proto3";
+import "../../common.proto";
+import "ObservableProperty.proto";
+import "../../@openhps/core/Unit.proto";
+import "Deployment.proto";
+import "System.proto";
+import "Procedure.proto";
+import "google/protobuf/any.proto";
+import "FeatureOfInterest.proto";
+
+enum SerializableThingType {
+	UNSPECIFIED = 0;
+	SERIALIZABLE_THING = 1 [
+		(className) = "SerializableThing",
+		(packageName) = "@openhps/rdf"
+	];
+	PROPERTY = 2 [
+		(className) = "Property",
+		(packageName) = "@openhps/rdf"
+	];
+	ACTUABLE_PROPERTY = 3 [
+		(className) = "ActuableProperty",
+		(packageName) = "@openhps/rdf"
+	];
+	OBSERVABLE_PROPERTY = 4 [
+		(className) = "ObservableProperty",
+		(packageName) = "@openhps/rdf"
+	];
+	PROPERTY_ACCURACY = 5 [
+		(className) = "PropertyAccuracy",
+		(packageName) = "@openhps/rdf"
+	];
+	USER = 6 [
+		(className) = "User",
+		(packageName) = "@openhps/rdf"
+	];
+	PROCEDURE = 7 [
+		(className) = "Procedure",
+		(packageName) = "@openhps/rdf"
+	];
+	PLATFORM = 8 [
+		(className) = "Platform",
+		(packageName) = "@openhps/rdf"
+	];
+	SYSTEM = 9 [
+		(className) = "System",
+		(packageName) = "@openhps/rdf"
+	];
+	ACTION = 10 [
+		(className) = "Action",
+		(packageName) = "@openhps/rdf"
+	];
+	OBSERVATION = 11 [
+		(className) = "Observation",
+		(packageName) = "@openhps/rdf"
+	];
+}
+
+message SerializableThing {
+	SerializableThingType _type = 0;
+	string id = 1;
+	string label = 2;
+	string description = 3;
+	optional string featureOfInterest = 4;
+	optional ObservableProperty forProperty = 5;
+	optional string minValue = 6;
+	optional string maxValue = 7;
+	optional Unit unit = 8;
+	optional string title = 9;
+	optional string firstName = 10;
+	optional string birthDate = 11;
+	optional string lastName = 12;
+	optional string jobTitle = 13;
+	optional string email = 14;
+	optional string _formattedName = 15;
+	optional string name = 16;
+	optional string nickname = 17;
+	optional string picture = 18;
+	repeated string account = 19;
+	optional string workplaceHomepage = 20;
+	optional Deployment deployment = 21;
+	repeated System subSystems = 22;
+	repeated Procedure procedures = 23;
+	optional google.protobuf.Any result = 24;
+	optional string resultTime = 25;
+	repeated FeatureOfInterest featuresOfInterest = 26;
+	repeated ObservableProperty observedProperties = 27;
+	repeated string usedProcedures = 28;
+}

@@ -1,0 +1,30 @@
+/**
+ * OpenHPS Protocol Buffer 
+ *  This file was automatically generated with @openhps/protobuf
+ * 
+ * (c) 2019-2024 Maxim Van de Wynckel & Vrije Universiteit Brussel
+ **/
+
+package openhpscore;
+syntax = "proto3";
+import "DataObject.proto";
+import "AbsolutePosition.proto";
+import "RelativePosition.proto";
+import "google/protobuf/any.proto";
+import "SensorCalibrationData.proto";
+
+message UnknownSensor {
+	DataObjectType _type = 0;
+	string displayName = 1;
+	int64 createdTimestamp = 2;
+	oneof uid {
+		string uid_string = 3;
+		bytes uid_bytes = 4;
+	}
+	string parentUID = 5;
+	AbsolutePosition position = 6;
+	repeated RelativePosition relativePositions = 7;
+	google.protobuf.Any value = 8;
+	double frequency = 9;
+	SensorCalibrationData calibrationData = 10;
+}

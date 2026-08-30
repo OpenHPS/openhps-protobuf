@@ -1,0 +1,21 @@
+/**
+ * OpenHPS Protocol Buffer 
+ *  This file was automatically generated with @openhps/protobuf
+ * 
+ * (c) 2019-2024 Maxim Van de Wynckel & Vrije Universiteit Brussel
+ **/
+
+package openhpscore;
+syntax = "proto3";
+import "Quaternion.proto";
+import "Accuracy.proto";
+
+message Orientation {
+	QuaternionType _type = 0;
+	double x = 1;
+	double y = 2;
+	double z = 3;
+	double w = 4;
+	int64 timestamp = 5;
+	Accuracy accuracy = 6;
+}

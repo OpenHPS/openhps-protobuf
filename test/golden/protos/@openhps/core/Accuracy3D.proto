@@ -1,0 +1,19 @@
+/**
+ * OpenHPS Protocol Buffer 
+ *  This file was automatically generated with @openhps/protobuf
+ * 
+ * (c) 2019-2024 Maxim Van de Wynckel & Vrije Universiteit Brussel
+ **/
+
+package openhpscore;
+syntax = "proto3";
+import "Accuracy.proto";
+import "Vector3.proto";
+import "Unit.proto";
+
+message Accuracy3D {
+	AccuracyType _type = 0;
+	Vector3 value_vector3 = 1;
+	Unit unit = 2;
+	Unit _unit = 3;
+}

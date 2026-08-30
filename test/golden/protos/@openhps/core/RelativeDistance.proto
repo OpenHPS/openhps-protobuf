@@ -1,0 +1,23 @@
+/**
+ * OpenHPS Protocol Buffer 
+ *  This file was automatically generated with @openhps/protobuf
+ * 
+ * (c) 2019-2024 Maxim Van de Wynckel & Vrije Universiteit Brussel
+ **/
+
+package openhpscore;
+syntax = "proto3";
+import "RelativePosition.proto";
+import "Accuracy.proto";
+import "LengthUnit.proto";
+
+message RelativeDistance {
+	RelativePositionType _type = 0;
+	int64 timestamp = 1;
+	string referenceObjectUID = 2;
+	string referenceObjectType = 3;
+	double referenceValue_number = 4;
+	Accuracy accuracy = 5;
+	double probability = 6;
+	LengthUnit unit_lengthunit = 7;
+}

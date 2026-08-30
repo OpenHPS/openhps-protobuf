@@ -1,0 +1,29 @@
+/**
+ * OpenHPS Protocol Buffer 
+ *  This file was automatically generated with @openhps/protobuf
+ * 
+ * (c) 2019-2024 Maxim Van de Wynckel & Vrije Universiteit Brussel
+ **/
+
+package openhpsrdf;
+syntax = "proto3";
+import "SerializableThing.proto";
+
+message User {
+	SerializableThingType _type = 0;
+	string id = 1;
+	string label = 2;
+	string description = 3;
+	string title = 4;
+	string firstName = 5;
+	string birthDate = 6;
+	string lastName = 7;
+	string jobTitle = 8;
+	string email = 9;
+	string _formattedName = 10;
+	string name = 11;
+	string nickname = 12;
+	string picture = 13;
+	repeated string account = 14;
+	string workplaceHomepage = 15;
+}

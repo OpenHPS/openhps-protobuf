@@ -1,0 +1,36 @@
+/**
+ * OpenHPS Protocol Buffer 
+ *  This file was automatically generated with @openhps/protobuf
+ * 
+ * (c) 2019-2024 Maxim Van de Wynckel & Vrije Universiteit Brussel
+ **/
+
+package openhpscore;
+syntax = "proto3";
+import "../../common.proto";
+import "Unit.proto";
+
+enum DerivedUnitType {
+	UNSPECIFIED = 0;
+	DERIVED_UNIT = 2 [
+		(className) = "DerivedUnit",
+		(packageName) = "@openhps/core"
+	];
+	ANGULAR_VELOCITY_UNIT = 5 [
+		(className) = "AngularVelocityUnit",
+		(packageName) = "@openhps/core"
+	];
+	LINEAR_VELOCITY_UNIT = 7 [
+		(className) = "LinearVelocityUnit",
+		(packageName) = "@openhps/core"
+	];
+	ACCELERATION_UNIT = 8 [
+		(className) = "AccelerationUnit",
+		(packageName) = "@openhps/core"
+	];
+}
+
+message DerivedUnit {
+	UnitType _type = 0;
+	string name = 1;
+}

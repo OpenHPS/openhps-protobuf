@@ -1,0 +1,39 @@
+/**
+ * OpenHPS Protocol Buffer 
+ *  This file was automatically generated with @openhps/protobuf
+ * 
+ * (c) 2019-2024 Maxim Van de Wynckel & Vrije Universiteit Brussel
+ **/
+
+package openhpsrf;
+syntax = "proto3";
+import "../../@openhps/core/DataObject.proto";
+import "../../@openhps/core/AbsolutePosition.proto";
+import "../../@openhps/core/RelativePosition.proto";
+import "MACAddress.proto";
+import "BLEService.proto";
+
+message BLEEddystone {
+	DataObjectType _type = 0;
+	string displayName = 1;
+	int64 createdTimestamp = 2;
+	oneof uid {
+		string uid_string = 3;
+		bytes uid_bytes = 4;
+	}
+	string parentUID = 5;
+	AbsolutePosition position = 6;
+	repeated RelativePosition relativePositions = 7;
+	string txPower = 8;
+	string frequency = 9;
+	string calibratedRSSI = 10;
+	string environmentFactor = 11;
+	bytes rawAdvertisement = 12;
+	map<string,bytes> manufacturerData = 13;
+	MACAddress address = 14;
+	repeated MACAddress knownAddresses = 15;
+	string mtu = 16;
+	string appearance = 17;
+	map<string,BLEService> services = 18;
+	string frame = 19;
+}

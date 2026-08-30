@@ -1,0 +1,50 @@
+/**
+ * OpenHPS Protocol Buffer 
+ *  This file was automatically generated with @openhps/protobuf
+ * 
+ * (c) 2019-2024 Maxim Van de Wynckel & Vrije Universiteit Brussel
+ **/
+
+package openhpscore;
+syntax = "proto3";
+import "../../common.proto";
+import "TimeUnit.proto";
+import "google/protobuf/any.proto";
+import "DataServiceDriver.proto";
+
+enum ServiceType {
+	UNSPECIFIED = 0;
+	SERVICE = 1 [
+		(className) = "Service",
+		(packageName) = "@openhps/core"
+	];
+	TIME_SERVICE = 2 [
+		(className) = "TimeService",
+		(packageName) = "@openhps/core"
+	];
+	DATA_SERVICE_DRIVER = 3 [
+		(className) = "DataServiceDriver",
+		(packageName) = "@openhps/core"
+	];
+	DATA_SERVICE = 4 [
+		(className) = "DataService",
+		(packageName) = "@openhps/core"
+	];
+	REMOTE_SERVICE = 5 [
+		(className) = "RemoteService",
+		(packageName) = "@openhps/core"
+	];
+}
+
+message Service {
+	ServiceType _type = 0;
+	oneof uid {
+		string uid_string = 1;
+		bytes uid_bytes = 2;
+	}
+	optional TimeUnit _timeUnit = 3;
+	optional bool isDefault = 4;
+	optional google.protobuf.Any options = 5;
+	optional DataServiceDriver driver = 6;
+	optional google.protobuf.Any priority = 7;
+}
