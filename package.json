@@ -73,7 +73,7 @@
         "@commitlint/config-conventional": "^19.8.1",
         "@eslint/js": "^9.34.0",
         "@openhps/core": "^1.0.16",
-        "@openhps/mqtt": "^0.1.9",
+        "@openhps/mqtt": "^1.0.2",
         "@openhps/rdf": "^1.1.7",
         "@openhps/rf": "^1.0.4",
         "@openhps/socket": "^0.1.8",
