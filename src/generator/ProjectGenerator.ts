@@ -15,7 +15,9 @@ export class ProjectGenerator extends DataSerializer {
 
     static findAllModules(dir: string): NodeModule[] {
         const packageFile = path.resolve(path.join(dir, 'package.json'));
-        if (packageFile === path.resolve(require.main?.path)) {
+        // require.main is undefined when mocha runs the specs through its ESM loader.
+        const mainPath = require.main?.path;
+        if (mainPath !== undefined && packageFile === path.resolve(mainPath)) {
             return [];
         }
 
@@ -57,8 +59,11 @@ export class ProjectGenerator extends DataSerializer {
 
     static loadModules(objects: Array<Serializable<any>>, module: NodeModule = require.main) {
         if (module === undefined) {
-            // Use cache instead
-            Object.values(require.cache).map((m) => this.loadModules(objects, m));
+            // Use cache instead. require.main is undefined under mocha's ESM loader, and
+            // the cache is typed as possibly holding undefined entries.
+            Object.values(require.cache)
+                .filter((cached): cached is NodeModule => cached !== undefined && Array.isArray(cached.children))
+                .forEach((cached) => this.loadModules(objects, cached));
             return;
         }
         this._modules.add(module.id);
@@ -71,9 +76,12 @@ export class ProjectGenerator extends DataSerializer {
                 }
             });
         }
-        module.children.forEach((module) => {
-            if (!this._modules.has(module.id)) {
-                this.loadModules(objects, module);
+        if (!Array.isArray(module.children)) {
+            return;
+        }
+        module.children.forEach((child) => {
+            if (child !== undefined && !this._modules.has(child.id)) {
+                this.loadModules(objects, child);
             }
         });
     }

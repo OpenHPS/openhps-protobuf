@@ -18,17 +18,17 @@ import { ProjectBuildOptions } from './types';
 /**
  * Protobuf object generator
  */
+// `Object` here is the global constructor interface used by Constructor<T>, not the wrapper type.
+/* eslint-disable @typescript-eslint/no-wrapper-object-types */
 export class ObjectGenerator extends ProtobufGenerator<Object> {
-    // eslint-disable-line
     processObject(object: Constructor<Object>, metaData: ObjectMemberMetadata): Promise<void> {
-        // eslint-disable-line
         throw new Error('Method not implemented.');
     }
 
     generate(object: Constructor<Object>, metaData: ObjectMemberMetadata): Promise<ProtobufMessage> {
-        // eslint-disable-line
         throw new Error('Method not implemented.');
     }
+    /* eslint-enable @typescript-eslint/no-wrapper-object-types */
 
     protected static typeMapping(
         object: ObjectMetadata,
@@ -267,7 +267,7 @@ export class ObjectGenerator extends ProtobufGenerator<Object> {
             .map((member) => {
                 const options: any =
                     member.options && (member.options as any).protobuf ? (member.options as any).protobuf : {};
-                let type: TypeMapping = undefined;
+                let type: TypeMapping;
                 const memberName = options.name ?? member.name;
 
                 if (memberName === 'uid') {
