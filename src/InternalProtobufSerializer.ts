@@ -9,18 +9,14 @@ import {
     TypedJSON,
     UUID,
 } from '@openhps/core';
-import { Type } from 'protobufjs';
 import { AnyT, JsonObjectMetadata } from 'typedjson';
-import * as protobuf from 'protobufjs';
+import type { Type } from 'protobufjs';
+import { primitiveWrapper } from './PrimitiveWrapper';
 
 export class InternalProtobufSerializer extends Serializer {
-    protected static primitiveWrapper: Type;
-
     constructor() {
         super();
         this.setSerializationStrategy(Map, this.convertAsMap.bind(this));
-        InternalProtobufSerializer.primitiveWrapper = new protobuf.Type('PrimitiveWrapperMessage');
-        InternalProtobufSerializer.primitiveWrapper.add(new protobuf.Field('value', 1, 'string'));
     }
 
     convertSingleValue(
@@ -122,7 +118,10 @@ export class InternalProtobufSerializer extends Serializer {
                 }
             } else {
                 const MessageType = sourceTypeMetadata.protobuf.messageType;
-                const field = MessageType.get(objMemberMetadata.name);
+                // Look the field up by its wire name: members renamed through
+                // `options.protobuf.name` are emitted under that name, so the
+                // metadata name would not resolve for them.
+                const field = MessageType.get(memberName);
                 serialized = this.convertSingleValue(
                     sourceObject[objMemberMetadata.key],
                     objMemberMetadata.type(),
@@ -139,7 +138,7 @@ export class InternalProtobufSerializer extends Serializer {
                 if (objMemberMetadata.type() === AnyT) {
                     const MessageType = serializerOptions.types.get(
                         sourceObject[objMemberMetadata.key].constructor.name,
-                    ) as protobuf.Type;
+                    ) as Type;
                     if (MessageType) {
                         const message = MessageType.create(serialized);
                         serialized = {
@@ -147,12 +146,12 @@ export class InternalProtobufSerializer extends Serializer {
                             value: MessageType.encode(message).finish(),
                         };
                     } else {
-                        const message = InternalProtobufSerializer.primitiveWrapper.create({
+                        const message = primitiveWrapper.create({
                             value: String(sourceObject[objMemberMetadata.key]),
                         });
                         serialized = {
                             type_url: sourceObject[objMemberMetadata.key].constructor.name,
-                            value: InternalProtobufSerializer.primitiveWrapper.encode(message).finish(),
+                            value: primitiveWrapper.encode(message).finish(),
                         };
                     }
                 }

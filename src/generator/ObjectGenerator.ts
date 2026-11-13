@@ -12,8 +12,11 @@ import {
 import chalk from 'chalk';
 import { AnyT, Constructor } from 'typedjson';
 import { HEADER } from './constants';
-import { ProtobufGenerator, ProtobufMessage } from './ProtobufGenerator';
+import { ProtobufGenerator, ProtobufMessage, TypeMapping } from './ProtobufGenerator';
 import { ProjectBuildOptions } from './types';
+
+// Re-exported so the generator's public surface does not change
+export type { ProtobufPrimitive, TypeMapping } from './ProtobufGenerator';
 
 /**
  * Protobuf object generator
@@ -384,12 +387,4 @@ export class ObjectGenerator extends ProtobufGenerator<Object> {
                 `}\n`,
         ];
     }
-}
-
-export type ProtobufPrimitive = 'string' | 'int32' | 'bool' | 'bytes';
-export interface TypeMapping {
-    syntax: ProtobufPrimitive | string;
-    types?: TypeMapping[];
-    package?: string;
-    name?: string;
 }

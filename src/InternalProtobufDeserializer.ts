@@ -10,17 +10,13 @@ import {
     TypedJSON,
     UUID,
 } from '@openhps/core';
-import * as protobuf from 'protobufjs';
 import { AnyT, JsonObjectMetadata } from 'typedjson';
+import type { Type } from 'protobufjs';
+import { primitiveWrapper } from './PrimitiveWrapper';
 
 export class InternalProtobufDeserializer extends Deserializer {
-    protected static primitiveWrapper: protobuf.Type;
-
     constructor() {
         super();
-
-        InternalProtobufDeserializer.primitiveWrapper = new protobuf.Type('PrimitiveWrapperMessage');
-        InternalProtobufDeserializer.primitiveWrapper.add(new protobuf.Field('value', 1, 'string'));
 
         this.setDeserializationStrategy(Number, (object: any) => {
             if (typeof object === 'number') {
@@ -131,18 +127,30 @@ export class InternalProtobufDeserializer extends Deserializer {
                 }
             }
         } else if (sourceObject.type_url && sourceObject.value) {
-            const MessageType = serializerOptions.types.get(sourceObject.type_url) as protobuf.Type;
-            const message = MessageType.decode(sourceObject.value);
-            const data = this.convertAsObject(
-                message,
-                new ConcreteTypeDescriptor(knownTypes.get(sourceObject.type_url)),
-                knownTypes,
-                memberName,
-                deserializer,
-                memberOptions,
-                serializerOptions,
-            );
-            return data;
+            const MessageType = serializerOptions.types.get(sourceObject.type_url) as Type;
+            if (MessageType) {
+                const message = MessageType.decode(sourceObject.value);
+                const data = this.convertAsObject(
+                    message,
+                    new ConcreteTypeDescriptor(knownTypes.get(sourceObject.type_url)),
+                    knownTypes,
+                    memberName,
+                    deserializer,
+                    memberOptions,
+                    serializerOptions,
+                );
+                return data;
+            }
+            // Unknown type: fall back to the primitive wrapper for primitive values
+            const message = primitiveWrapper.decode(sourceObject.value) as any;
+            switch (sourceObject.type_url) {
+                case 'Boolean':
+                    return (message.value === 'true') as any;
+                case 'Number':
+                    return Number(message.value) as any;
+                default:
+                    return message.value as any;
+            }
         }
 
         const sourceMetadata = sourceObjectMetadata;
@@ -172,25 +180,32 @@ export class InternalProtobufDeserializer extends Deserializer {
                 } else {
                     return;
                 }
-            } else if (!Object.prototype.hasOwnProperty.call(sourceObject, memberName) || !objMemberValue) {
+            } else if (
+                !Object.prototype.hasOwnProperty.call(sourceObject, memberName) ||
+                objMemberValue === undefined ||
+                objMemberValue === null
+            ) {
                 return;
             } else if (objMemberMetadata.type() === AnyT && objMemberValue.type_url) {
-                const MessageType = serializerOptions.types.get(sourceObject[memberName].type_url) as protobuf.Type;
+                const MessageType = serializerOptions.types.get(sourceObject[memberName].type_url) as Type;
                 if (MessageType) {
-                    const message = MessageType.decode(objMemberValue.value);
-                    revivedValue = deserializer.convertSingleValue(
-                        message,
-                        new ConcreteTypeDescriptor(knownTypes.get(objMemberValue.type_url)),
-                        knownTypes,
-                        objMemberDebugName,
-                        objMemberOptions,
-                        serializerOptions,
-                    );
+                    const messageType = knownTypes.get(objMemberValue.type_url);
+                    if (messageType !== undefined) {
+                        const message = MessageType.decode(objMemberValue.value);
+                        revivedValue = deserializer.convertSingleValue(
+                            message,
+                            new ConcreteTypeDescriptor(messageType),
+                            knownTypes,
+                            objMemberDebugName,
+                            objMemberOptions,
+                            serializerOptions,
+                        );
+                    }
                 } else if (objMemberValue.value) {
-                    const message = InternalProtobufDeserializer.primitiveWrapper.decode(objMemberValue.value) as any;
+                    const message = primitiveWrapper.decode(objMemberValue.value) as any;
                     switch (objMemberValue.type_url) {
                         case 'Boolean':
-                            revivedValue = Boolean(message.value);
+                            revivedValue = message.value === 'true';
                             break;
                         case 'Number':
                             revivedValue = Number(message.value);

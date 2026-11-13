@@ -22,7 +22,7 @@ import {
 import { ProtobufSerializer } from '../ProtobufSerializer';
 import assert from 'node:assert/strict';
 
-const args: [K: string] = yargs.argv as any;
+const args = yargs.argv;
 const data = {
     directory: path.normalize('tmp'),
 };

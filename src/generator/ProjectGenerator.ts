@@ -46,14 +46,18 @@ export class ProjectGenerator extends DataSerializer {
     }
 
     static findModule(dir: string): string {
-        const packageFile = path.join(dir, 'package.json');
+        const resolvedDir = path.resolve(dir);
+        const packageFile = path.join(resolvedDir, 'package.json');
         if (fs.existsSync(packageFile)) {
             const packageJson = JSON.parse(fs.readFileSync(packageFile, { encoding: 'utf-8' }));
             return packageJson.name;
         } else {
-            const completeDir = dir.split(path.sep);
-            completeDir.pop();
-            return this.findModule(completeDir.join(path.sep));
+            const parentDir = path.dirname(resolvedDir);
+            if (parentDir === resolvedDir) {
+                // Reached the filesystem root without finding a manifest
+                throw new Error(`Unable to find a package.json above '${dir}'`);
+            }
+            return this.findModule(parentDir);
         }
     }
 
@@ -95,6 +99,9 @@ export class ProjectGenerator extends DataSerializer {
 
     static loadClasses(): Array<ObjectMetadata> {
         const declarations: Array<ObjectMetadata> = [];
+        // Reset so a second build in the same process does not reuse stale module/package state
+        this._modules = new Set();
+        this._packages = new Set();
         this.findAllModules('./');
         this.knownTypes.forEach((value) => {
             const metadata = DataSerializerUtils.getOwnMetadata(value);
@@ -135,37 +142,47 @@ export class ProjectGenerator extends DataSerializer {
 
     static buildProject(directory: string, options: ProjectBuildOptions = {}): Promise<number> {
         return new Promise((resolve, reject) => {
-            // Prepare directories
-            if (fs.existsSync(directory)) {
-                fs.rmSync(directory, { recursive: true });
-            }
-            fs.mkdirSync(directory, { recursive: true });
+            (async () => {
+                const resolvedDirectory = path.resolve(directory);
+                // The CLI passes -d <dir> verbatim: refuse to delete the current working
+                // directory, one of its parents, or the filesystem root
+                if (
+                    resolvedDirectory === path.parse(resolvedDirectory).root ||
+                    resolvedDirectory === process.cwd() ||
+                    process.cwd().startsWith(resolvedDirectory + path.sep)
+                ) {
+                    throw new Error(
+                        `Refusing to use '${resolvedDirectory}': it is the current working directory, a parent of it, or the filesystem root.`,
+                    );
+                }
 
-            // Get all class sources
-            if (options.logLevel > 0) {
-                console.log('Generating protocol buffer messages ...');
-                console.log('Use of any types = ', options.useAnyType);
-            }
-            ProjectGenerator.generateProtoMessages(options)
-                .then((classes) => {
-                    if (options.logLevel > 0) console.log('Saving generating protocol buffer messages ...');
-                    classes.forEach((value, key) => {
-                        const packageDir = path.join(directory, ...value[0].split('.'));
-                        if (!fs.existsSync(packageDir)) {
-                            fs.mkdirsSync(packageDir);
-                        }
-                        fs.writeFileSync(path.join(packageDir, key + '.proto'), value[1], {
-                            encoding: 'utf-8',
-                        });
-                    });
+                // Prepare directories
+                if (await fs.pathExists(resolvedDirectory)) {
+                    await fs.promises.rm(resolvedDirectory, { recursive: true });
+                }
+                await fs.promises.mkdir(resolvedDirectory, { recursive: true });
 
-                    fs.writeFileSync(path.join(directory, 'common.proto'), COMMON, {
+                // Get all class sources
+                if (options.logLevel > 0) {
+                    console.log('Generating protocol buffer messages ...');
+                    console.log('Use of any types = ', options.useAnyType);
+                }
+                const classes = await ProjectGenerator.generateProtoMessages(options);
+                if (options.logLevel > 0) console.log('Saving generating protocol buffer messages ...');
+                for (const [key, value] of classes) {
+                    const packageDir = path.join(resolvedDirectory, ...value[0].split('.'));
+                    await fs.ensureDir(packageDir);
+                    await fs.promises.writeFile(path.join(packageDir, key + '.proto'), value[1], {
                         encoding: 'utf-8',
                     });
+                }
 
-                    resolve(classes.size);
-                })
-                .catch(reject);
+                await fs.promises.writeFile(path.join(resolvedDirectory, 'common.proto'), COMMON, {
+                    encoding: 'utf-8',
+                });
+
+                resolve(classes.size);
+            })().catch(reject);
         });
     }
 }
