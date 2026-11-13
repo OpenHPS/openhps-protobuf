@@ -4,6 +4,14 @@
     "description": "OpenHPS Protocol Buffer Generator",
     "author": "Maxim Van de Wynckel",
     "license": "Apache-2.0",
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/OpenHPS/openhps-protobuf.git"
+    },
+    "bugs": {
+        "url": "https://github.com/OpenHPS/openhps-protobuf/issues"
+    },
+    "homepage": "https://openhps.org",
     "publishConfig": {
         "access": "public"
     },
