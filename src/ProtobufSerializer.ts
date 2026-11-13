@@ -45,8 +45,10 @@ export class ProtobufSerializer extends DataSerializer {
     static initialize(directory?: string): Promise<void> {
         return new Promise((resolve, reject) => {
             ProtobufSerializer.root = new protobuf.Root();
-            // Reinitialisation (e.g. per test) must not accumulate stale type entries
-            this.options.types = new Map();
+            // Reinitialisation (e.g. per test) must not accumulate stale type entries:
+            // build the new map first and only swap it in once the schemas have
+            // loaded, so a failed load keeps the previous types instead of wiping them
+            const types = new Map<string, protobuf.Type>();
             // The generated schemas extend google.protobuf.EnumValueOptions, which is
             // declared in descriptor.proto. protobufjs resolves imports relative to the
             // origin file, so it looked for google/protobuf/descriptor.proto inside the
@@ -112,9 +114,10 @@ export class ProtobufSerializer extends DataSerializer {
                                             messageTypeEnum: enumNumber,
                                             enumMapping,
                                         };
-                                        this.options.types.set(className, MessageType);
+                                        types.set(className, MessageType);
                                     }
                                 });
+                                this.options.types = types;
                                 resolve();
                             })
                             .catch((error) => {
