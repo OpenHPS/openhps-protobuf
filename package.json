@@ -75,7 +75,7 @@
         "long": "^5.2.3",
         "protobufjs": "^8.8.1",
         "tslib": "^2.9.1",
-        "yargs": "^17.7.2"
+        "yargs": "^18.2.0"
     },
     "devDependencies": {
         "@commitlint/cli": "^21.2.4",
