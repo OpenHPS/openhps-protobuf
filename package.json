@@ -69,7 +69,7 @@
         "build:golden": "shx rm -rf test/golden/protos && node -r ./test/tsconfig.js test/helpers/build-protos.ts test/golden/protos"
     },
     "dependencies": {
-        "@inquirer/prompts": "^5.0.5",
+        "@inquirer/prompts": "^8.8.0",
         "chalk": "^4.1.2",
         "fs-extra": "^11.4.1",
         "long": "^5.2.3",
